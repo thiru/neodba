@@ -1,0 +1,7 @@
+{:config-paths ["better-cond/better-cond"]
+ :linters {:namespace-name-mismatch {:level :warn}
+           :not-empty? {:level :off}
+           :unused-namespace {:exclude [neodba.utils.common]}}
+ :lint-as {neodba.utils.results/while-success-> clojure.core/->
+           neodba.utils.results/while-success->> clojure.core/->>
+           neodba.utils.specin/defn clojure.core/defn}}

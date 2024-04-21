@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Lint source directories.
+# Be sure to run `lint-init` first.
+
+clj-kondo --lint src --lint dev

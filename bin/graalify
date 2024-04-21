@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+# Build self-contained executable using GraalVM.
+# See this link for a reference native-image options:
+# https://www.graalvm.org/latest/reference-manual/native-image/overview/BuildOptions/
+
+if ! command -v native-image &> /dev/null; then
+  echo 'GraalVM native-image command not found'
+  exit 1
+fi
+
+# Java compiled classes will be placed in this directory:
+mkdir -p classes
+
+# Binary will be placed within this directory:
+mkdir -p target
+
+# Compile Clojure:
+clojure -J-Dclojure.spec.compile-asserts=false -M -e "(compile 'neodba.main)"
+
+# Build stand-alone binary:
+native-image \
+  -cp "$(clojure -Spath):classes" \
+  -H:Name=target/neodba \
+  -H:+ReportExceptionStackTraces \
+  --initialize-at-build-time \
+  --install-exit-handlers \
+  --diagnostics-mode \
+  --static \
+  --verbose \
+  --no-fallback \
+  --report-unsupported-elements-at-runtime \
+  "-J-Dclojure.spec.compile-asserts=false" \
+  "-J-Xmx16g" \
+  neodba.main
+
+# Explanation of some of the args above:
+
+# --initialize-at-build-time
+# This is needed for Clojure or else there will be strange errors
+
+# --install-exit-handlers
+# Handle signals like the JVM does (allowing shutdown hooks)
+
+# --diagnostics-mode
+# Since GraalVM 22.0 this is needed in order to use the
+# --initialize-at-build-time option without arguments
+
+# --static
+# Don't depend on any system libraries. This flag was originally intended for
+# Alpine docker images and only works on Linux.
+
+# --no-fallback
+# If native compilation fails, without this, it will create a fallback image
+# which is a full JVM to run your program (don't want this typically).
+
+# --no-server
+# Without this GraalVM will start a backgroud server that will be used next
+# time
+
+# --report-unsupported-elements-at-runtime
+# Handle unsupported elements/methods properly
+
+# "-J-Xmx16g"
+# Limit GraalVM to the specified amount of RAM. More memory results in faster
+# builds but will an error out if you don't have enough RAM.

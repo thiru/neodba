@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Run app using Clojure CLI.
+
+clojure -J-Dclojure.spec.compile-asserts=false -M -m neodba.main "$@"

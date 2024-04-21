@@ -1,0 +1,12 @@
+.*history
+.clj-kondo/**
+!.clj-kondo/config.edn
+.cpcache
+.lsp/
+.nrepl-port
+.prepl-port
+classes/
+out/
+reports/
+target/
+tmp/

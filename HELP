@@ -1,0 +1,23 @@
+neodba %s
+
+A Neovim plugin to interact with databases.
+
+USAGE: neodba [<opts>] <sub-command> [<args>]
+
+OPTIONS:
+
+--log-level [FATAL|ERROR|WARN|SUCCESS|INFO|DEBUG|TRACE]
+  Specify the log level
+  The default value is INFO
+
+SUB-COMMANDS:
+
+server [<PORT>]
+  Start server on the specified port
+  The default port is 5555
+
+--help, -h
+  Show this help
+
+--version
+  Show current version
