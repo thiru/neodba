@@ -2,12 +2,14 @@
   "Command-line interface abstraction."
   (:refer-clojure :exclude [defn])
   (:require
+    [clojure.pprint :as pp]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.common :as u]
     [neodba.utils.log :as log :refer [log]]
     [neodba.utils.results :as r]
     [neodba.utils.specin :refer [defn]]
+    [neodba.dba :as dba]
     [neodba.server :as server]))
 
 
@@ -112,7 +114,16 @@
     (server/start! port)
     (-> (Runtime/getRuntime)
         (.addShutdownHook (new Thread ^java.lang.Runnable server/stop!)))
-    @(promise)
+    ;@(promise)
+    (r/r :success "")))
+
+(defn execute-sql
+  {:args (s/cat :_cli-r ::cli-r)
+   :ret ::cli-r}
+  [{:keys [sub-cmd-args] :as _cli-r}]
+  (let [sql (first sub-cmd-args)]
+    (log (r/r :info (str "Executing SQL: " sql)))
+    (pp/pprint (dba/execute sql))
     (r/r :success "")))
 
 (defn set-log-level
@@ -143,6 +154,9 @@
 
     "server"
     (server-sub-cmd cli-r)
+
+    "exec"
+    (execute-sql cli-r)
 
     nil
     (assoc cli-r

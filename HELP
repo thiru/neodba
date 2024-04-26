@@ -12,6 +12,9 @@ OPTIONS:
 
 SUB-COMMANDS:
 
+exec <SQL>
+  Execute the given SQL
+
 server [<PORT>]
   Start server on the specified port
   The default port is 5555
