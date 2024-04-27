@@ -22,6 +22,7 @@ clojure -J-Dclojure.spec.compile-asserts=false -M -e "(compile 'neodba.main)"
 native-image \
   -cp "$(clojure -Spath):classes" \
   -H:+ReportExceptionStackTraces \
+  -march=native \
   -J-Dclojure.spec.skip-macros=true \
   -J-Dclojure.spec.compile-asserts=false \
   -J-Dclojure.compiler.direct-linking=true \
@@ -39,6 +40,9 @@ native-image \
   neodba.main
 
 # Explanation of some of the args above:
+
+# -march=native
+# Increased performance at the cost of compatibility
 
 # --initialize-at-build-time
 # This is needed for Clojure or else there will be strange errors
