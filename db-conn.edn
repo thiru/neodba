@@ -1,4 +1,4 @@
-{:dbtype "postgres"
- :dbname "postgres"
- :user "postgres"
- :password "postgres"}
+{:dbtype "sqlite"
+ :dbname "dbs/test"
+ :user ""
+ :password ""}
