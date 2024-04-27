@@ -2,7 +2,6 @@
   "Command-line interface abstraction."
   (:refer-clojure :exclude [defn])
   (:require
-    [clojure.pprint :as pp]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.common :as u]
@@ -123,7 +122,7 @@
   [{:keys [sub-cmd-args] :as _cli-r}]
   (let [sql (first sub-cmd-args)]
     (log (r/r :info (str "Executing SQL: " sql)))
-    (pp/pprint (dba/execute sql))
+    (dba/print-query-res (dba/execute sql))
     (r/r :success "")))
 
 (defn set-log-level

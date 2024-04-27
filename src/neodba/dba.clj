@@ -19,5 +19,9 @@
     (with-open [con (jdbc/get-connection db)]
       (jdbc/execute! con [sql]))))
 
+(defn print-query-res [query-res]
+  (let [sans-ns (map #(update-keys % name) query-res)]
+    (pp/print-table sans-ns)))
+
 (comment
-  (pp/pprint (execute "select * from users")))
+  (print-query-res (execute "select * from users")))
