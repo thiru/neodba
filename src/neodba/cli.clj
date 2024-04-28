@@ -121,9 +121,12 @@
    :ret ::cli-r}
   [{:keys [sub-cmd-args] :as _cli-r}]
   (let [sql (first sub-cmd-args)]
-    (log (r/r :info (str "Executing SQL: " sql)))
-    (dba/print-rs (dba/execute sql))
-    (r/r :success "")))
+    (if (str/blank? sql)
+      (r/r :warn "No SQL provided")
+      (do
+        (log (r/r :info (str "Executing SQL: " sql)))
+        (dba/print-rs (dba/execute sql))
+        (r/r :success "")))))
 
 (defn set-log-level
   {:args (s/cat :_cli-r ::cli-r)
