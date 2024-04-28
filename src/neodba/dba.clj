@@ -22,8 +22,8 @@
                      [sql]
                      {:builder-fn jdbc-rs/as-unqualified-lower-maps}))))
 
-(defn print-query-res [query-res]
+(defn print-rs [query-res]
   (pp/print-table query-res))
 
 (comment
-  (print-query-res (execute "select * from users")))
+  (print-rs (execute "select * from users")))

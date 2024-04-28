@@ -122,7 +122,7 @@
   [{:keys [sub-cmd-args] :as _cli-r}]
   (let [sql (first sub-cmd-args)]
     (log (r/r :info (str "Executing SQL: " sql)))
-    (dba/print-query-res (dba/execute sql))
+    (dba/print-rs (dba/execute sql))
     (r/r :success "")))
 
 (defn set-log-level
