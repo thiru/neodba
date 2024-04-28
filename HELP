@@ -2,7 +2,7 @@ neodba %s
 
 A Neovim plugin to interact with databases.
 
-USAGE: neodba [<opts>] <sub-command> [<args>]
+USAGE: neodba [<OPTIONS>] [<SQL><NIL>]
 
 OPTIONS:
 
@@ -10,17 +10,19 @@ OPTIONS:
   Specify the log level
   The default value is INFO
 
-SUB-COMMANDS:
-
-exec <SQL>
-  Execute the given SQL
-
-server [<PORT>]
-  Start server on the specified port
-  The default port is 5555
-
 --help, -h
   Show this help
 
 --version
   Show current version
+
+<SQL>
+
+When arguments are provided it is intrepreted as a SQL statement to execute.
+For example:
+
+  neodba select * from users
+
+<NIL>
+
+When no arguments are provided SQL statements are read from stdin.

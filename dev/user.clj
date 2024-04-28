@@ -11,7 +11,6 @@
     [neodba.utils.common :as u]
     [neodba.utils.log :as log]
     [neodba.utils.results :as r]
-    [neodba.server :as server]
     [puget.printer :as puget]
     [rebel-readline.main :as rebel]
     [utils.nrepl :as nrepl]
@@ -24,8 +23,6 @@
   (reset! initialised? true)
   (printing/install-expound-printer)
   (nrepl/start-server)
-  (server/start! nil)
-  (.addShutdownHook (Runtime/getRuntime) (new Thread server/stop!))
   ;; Blocking call:
   (rebel/-main)
   (nrepl/stop-server)

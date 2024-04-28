@@ -8,8 +8,8 @@
     [neodba.utils.log :as log :refer [log]]
     [neodba.utils.results :as r]
     [neodba.utils.specin :refer [defn]]
-    [neodba.dba :as dba]
-    [neodba.server :as server]))
+    [neodba.api :as api]
+    [neodba.dba :as dba]))
 
 
 (set! *warn-on-reflection* true) ; for graalvm
@@ -45,11 +45,10 @@
   {:args (s/cat :cli-args ::cli-args)
    :ret ::cli-r}
   [cli-args]
-  (if (or (empty? cli-args)
-          (str/blank? (first cli-args)))
-    (r/r :error "No sub-command specified. Try running: neodba --help"
+  (if (empty? cli-args)
+    (r/r :success "No arguments provided. Will enter stdin mode."
          {:cli-args cli-args})
-    (r/r :success "Some arguments found"
+    (r/r :success "Arguments found. Will execute each as SQL."
          {:cli-args cli-args})))
 
 (defn extract-global-opts
@@ -82,7 +81,7 @@
   {:args (s/cat :_cli-r ::cli-r)
    :ret ::cli-r}
   [{:keys [global-flag-opts cli-args] :as cli-r}]
-  (if-let [sub-cmd  (u/find-first global-cmd-opts global-flag-opts)]
+  (if-let [sub-cmd (u/find-first global-cmd-opts global-flag-opts)]
     (assoc cli-r
           :level :success
           :message (format "Extracted global option, '%s' as sub-command" sub-cmd)
@@ -104,29 +103,12 @@
                      extract-global-opts
                      extract-sub-cmd-and-args))
 
-(defn server-sub-cmd
-  {:args (s/cat :_cli-r ::cli-r)
-   :ret ::cli-r}
-  [{:keys [sub-cmd-args] :as _cli-r}]
-  (let [port (u/parse-int (first sub-cmd-args) :fallback nil)]
-    (log (r/r :info (str "neodba v" version)))
-    (server/start! port)
-    (-> (Runtime/getRuntime)
-        (.addShutdownHook (new Thread ^java.lang.Runnable server/stop!)))
-    ;@(promise)
-    (r/r :success "")))
-
 (defn execute-sql
   {:args (s/cat :_cli-r ::cli-r)
    :ret ::cli-r}
-  [{:keys [sub-cmd-args] :as _cli-r}]
-  (let [sql (first sub-cmd-args)]
-    (if (str/blank? sql)
-      (r/r :warn "No SQL provided")
-      (do
-        (log (r/r :info (str "Executing SQL: " sql)))
-        (dba/print-rs (dba/execute sql))
-        (r/r :success "")))))
+  [{:keys [sub-cmd sub-cmd-args] :as _cli-r}]
+  (let [sql (str sub-cmd " " (str/join " " sub-cmd-args))]
+    (api/execute-sql sql)))
 
 (defn set-log-level
   {:args (s/cat :_cli-r ::cli-r)
@@ -154,20 +136,10 @@
     "--version"
     (r/r :success version)
 
-    "server"
-    (server-sub-cmd cli-r)
-
-    "exec"
-    (execute-sql cli-r)
-
     nil
-    (assoc cli-r
-           :level :error
-           :message "No sub-command provided. Try running: neodba --help")
+    (api/read-sql-from-stdin)
 
-    (assoc cli-r
-           :level :error
-           :message "Unrecognised sub-command. Try running: neodba --help")))
+    (execute-sql cli-r)))
 
 (defn run
   "Execute the command specified by the given arguments."
@@ -183,5 +155,4 @@
 (comment
   (parse-cli-args [])
   (parse-cli-args ["--version"])
-  (parse-cli-args ["server"])
-  (parse-cli-args ["--log-level" "info" "server" "8000"]))
+  (parse-cli-args ["--log-level" "info" "exec" "select * from users"]))
