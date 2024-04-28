@@ -12,7 +12,7 @@
 
 
 (defn get-connection-map []
-  (-> (slurp "db-conn.edn")
+  (-> (slurp "db-spec.edn")
       (edn/read-string)))
 
 (defn execute [sql]
