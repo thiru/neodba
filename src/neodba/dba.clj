@@ -1,5 +1,5 @@
 (ns neodba.dba
-  "TODO"
+  "Database access layer."
   (:require
     [clojure.edn :as edn]
     [clojure.pprint :as pp]
