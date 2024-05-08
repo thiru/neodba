@@ -11,7 +11,12 @@
 (set! *warn-on-reflection* true) ; for graalvm
 
 
-(def prompt "$ ")
+(def prompt
+  (delay
+    (let [tty? (not (nil? (System/console)))]
+      (if tty?
+        "$ "
+        ""))))
 
 
 (defn execute-sql
@@ -27,7 +32,7 @@
   []
   (log (r/r :info "Reading SQL from stdin... (to exit press CTRL-D or type 'quit')"))
   (loop []
-    (print prompt)
+    (print @prompt)
     (flush)
     (let [input (read-line)]
       (if (or (nil? input) (= "quit" input))
