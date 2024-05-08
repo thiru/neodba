@@ -36,7 +36,8 @@
           (try
             (dba/print-rs (dba/execute input))
             (catch Exception ex
-              (println (.toString ex))))
+              (binding [*out* *err*]
+                (println (.toString ex)))))
           (println)
           (recur)))))
   (r/r :success ""))
