@@ -5,9 +5,9 @@
 .lsp/
 .nrepl-port
 .prepl-port
-dbs/
 classes/
 out/
 reports/
 target/
+test/
 tmp/

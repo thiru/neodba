@@ -1,4 +1,4 @@
 {:dbtype "sqlite"
- :dbname "dbs/test"
+ :dbname "test/sample.db"
  :user ""
  :password ""}
