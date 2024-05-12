@@ -29,7 +29,8 @@
 
 (defn read-sql-from-stdin
   []
-  (log (r/r :info "Reading SQL from stdin... (to exit press CTRL-D or type 'quit')"))
+  (when @u/tty?
+    (log (r/r :info "Reading SQL from stdin... (to exit press CTRL-D or type 'quit')")))
   (loop []
     (print @prompt)
     (flush)
