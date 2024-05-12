@@ -8,8 +8,7 @@
     [neodba.utils.log :as log :refer [log]]
     [neodba.utils.results :as r]
     [neodba.utils.specin :refer [defn]]
-    [neodba.api :as api]
-    [neodba.dba :as dba]))
+    [neodba.api :as api]))
 
 
 (set! *warn-on-reflection* true) ; for graalvm
