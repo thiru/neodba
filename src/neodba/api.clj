@@ -11,11 +11,7 @@
 (set! *warn-on-reflection* true) ; for graalvm
 
 
-(def prompt
-  (delay
-    (if @u/tty?
-      "$ "
-      "")))
+(def prompt "$ ")
 
 
 (defn execute-sql
@@ -23,7 +19,8 @@
   (if (str/blank? sql)
     (r/r :warn "No SQL provided")
     (do
-      (log (r/r :info (str "Executing SQL: " sql)))
+      (when @u/tty?
+        (log (r/r :info (str "Executing SQL: " sql))))
       (dba/print-rs (dba/execute sql))
       (r/r :success ""))))
 
@@ -32,17 +29,20 @@
   (when @u/tty?
     (log (r/r :info "Reading SQL from stdin... (to exit press CTRL-D or type 'quit')")))
   (loop []
-    (print @prompt)
-    (flush)
+    (when @u/tty?
+      (print prompt)
+      (flush))
     (let [input (read-line)]
       (if (or (nil? input) (= "quit" input))
-        (println "Exiting...")
+        (when @u/tty?
+          (println "Exiting..."))
         (do
           (try
             (dba/print-rs (dba/execute input))
             (catch Exception ex
               (binding [*out* *err*]
                 (println (.toString ex)))))
-          (println)
+          (when @u/tty?
+            (println))
           (recur)))))
   (r/r :success ""))
