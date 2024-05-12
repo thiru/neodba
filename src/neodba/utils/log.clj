@@ -24,22 +24,21 @@
 (def formatted-levels
   "Pre-calculate the appearance of levels to save during runtime."
   (delay
-    (let [tty? (not (nil? (System/console)))]
-      (if tty?
-        {:fatal   (colourise :fatal   "FATAL: ")
-         :error   (colourise :error   "ERROR: ")
-         :warn    (colourise :warn    "WARN: ")
-         :success (colourise :success "SUCCESS: ")
-         :info    (colourise :info    "INFO: ")
-         :debug   (colourise :debug   "DEBUG: ")
-         :trace   (colourise :trace   "TRACE: ")}
-        {:fatal   "FATAL: "
-         :error   "ERROR: "
-         :warn    "WARN: "
-         :success "SUCCESS: "
-         :info    "INFO: "
-         :debug   "DEBUG: "
-         :trace   "TRACE: "}))))
+    (if @u/tty?
+      {:fatal   (colourise :fatal   "FATAL: ")
+       :error   (colourise :error   "ERROR: ")
+       :warn    (colourise :warn    "WARN: ")
+       :success (colourise :success "SUCCESS: ")
+       :info    (colourise :info    "INFO: ")
+       :debug   (colourise :debug   "DEBUG: ")
+       :trace   (colourise :trace   "TRACE: ")}
+      {:fatal   "FATAL: "
+       :error   "ERROR: "
+       :warn    "WARN: "
+       :success "SUCCESS: "
+       :info    "INFO: "
+       :debug   "DEBUG: "
+       :trace   "TRACE: "})))
 
 (defn get-log-level
   "Get the current logging level (keyword)."

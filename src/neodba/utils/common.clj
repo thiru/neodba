@@ -13,6 +13,8 @@
 (set! *warn-on-reflection* true) ; for graalvm
 
 
+(def tty? (delay (not (nil? (System/console)))))
+
 (defn find-first
   "Get the first element in `coll` where `pred` returns truthy when applied to it."
   [pred coll]

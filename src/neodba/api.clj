@@ -13,10 +13,9 @@
 
 (def prompt
   (delay
-    (let [tty? (not (nil? (System/console)))]
-      (if tty?
-        "$ "
-        ""))))
+    (if @u/tty?
+      "$ "
+      "")))
 
 
 (defn execute-sql
