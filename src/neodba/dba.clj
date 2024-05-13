@@ -28,5 +28,23 @@
 (defn print-rs [query-res]
   (pp/print-table query-res))
 
+(defn get-schemas []
+  (let [db (get-connection-map)]
+    (with-open [con (jdbc/get-connection db)]
+      (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
+          ;; return a java.sql.ResultSet describing all tables and views:
+          (.getSchemas)
+          (jdbc-rs/datafiable-result-set db)))))
+
+(defn get-tables []
+  (let [db (get-connection-map)]
+    (with-open [con (jdbc/get-connection db)]
+      (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
+          ;; return a java.sql.ResultSet describing all tables and views:
+          (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))
+          (jdbc-rs/datafiable-result-set db)))))
+
 (comment
-  (print-rs (execute "select * from users")))
+  (print-rs (execute "select * from users"))
+  (print-rs (get-schemas))
+  (print-rs (get-tables)))

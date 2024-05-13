@@ -38,7 +38,16 @@
           (println "Exiting..."))
         (do
           (try
-            (dba/print-rs (dba/execute input))
+            (dba/print-rs
+              (cond
+                (= "(get-schemas)" input)
+                (dba/get-schemas)
+
+                (= "(get-tables)" input)
+                (dba/get-tables)
+
+                :else
+                (dba/execute input)))
             (catch Exception ex
               (binding [*out* *err*]
                 (println (.toString ex)))))
