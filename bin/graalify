@@ -34,6 +34,7 @@ native-image \
   --verbose \
   --no-fallback \
   --report-unsupported-elements-at-runtime \
+  --static --libc=musl \
   "-J-Xmx16g" \
   -o target/neodba \
   neodba.main
@@ -53,9 +54,9 @@ native-image \
 # Since GraalVM 22.0 this is needed in order to use the
 # --initialize-at-build-time option without arguments
 
-# --static
-# Don't depend on any system libraries. This flag was originally intended for
-# Alpine docker images and only works on Linux.
+# --static --libc=musl
+# Build statically linked binary (no dependencies)
+# See: https://www.graalvm.org/latest/reference-manual/native-image/guides/build-static-executables/
 
 # --no-fallback
 # If native compilation fails, without this, it will create a fallback image
