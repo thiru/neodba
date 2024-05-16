@@ -45,6 +45,8 @@
           (jdbc-rs/datafiable-result-set db)))))
 
 (comment
-  (print-rs (execute "select * from users"))
+  ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
+  ;; Start Postgres instance in docker: docker run --rm -P -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD="postgres" --name pg postgres
+  (print-rs (execute "select * from Artist limit 5"))
   (print-rs (get-schemas))
   (print-rs (get-tables)))
