@@ -23,7 +23,7 @@
       (with-open [con (jdbc/get-connection db)]
         (jdbc/execute! con
                        [sql]
-                       {:builder-fn jdbc-rs/as-unqualified-lower-maps})))))
+                       {:builder-fn jdbc-rs/as-unqualified-maps})))))
 
 (defn print-rs [query-res]
   (pp/print-table query-res))
