@@ -25,9 +25,6 @@
                        [sql]
                        {:builder-fn jdbc-rs/as-unqualified-maps})))))
 
-(defn print-rs [query-res]
-  (pp/print-table query-res))
-
 (defn get-schemas []
   (let [db (get-connection-map)]
     (with-open [con (jdbc/get-connection db)]
@@ -43,6 +40,10 @@
           ;; return a java.sql.ResultSet describing all tables and views:
           (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))
           (jdbc-rs/datafiable-result-set db)))))
+
+(defn print-rs [query-res]
+  (let [rows (mapv #(update-keys % name) query-res)]
+    (pp/print-table rows)))
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
