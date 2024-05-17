@@ -8,6 +8,8 @@
     [clojure.repl :refer [doc]]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
+    [neodba.api :as api]
+    [neodba.dba :as dba]
     [neodba.utils.common :as u]
     [neodba.utils.log :as log]
     [neodba.utils.results :as r]
