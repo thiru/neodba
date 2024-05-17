@@ -17,7 +17,9 @@
 (defn execute-sql
   [sql]
   (if (str/blank? sql)
-    (r/r :warn "No SQL provided")
+    (let [res (r/r :warn "No SQL provided")]
+      (r/print-msg res)
+      res)
     (do
       (when @u/tty?
         (log (r/r :info (str "Executing SQL: " sql))))
