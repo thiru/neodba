@@ -37,8 +37,16 @@
   (let [db (get-connection-map)]
     (with-open [con (jdbc/get-connection db)]
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
-          ;; return a java.sql.ResultSet describing all tables and views:
-          (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))
+          ;; return a java.sql.ResultSet describing all tables:
+          (.getTables nil nil nil (into-array ["TABLE"]))
+          (jdbc-rs/datafiable-result-set db)))))
+
+(defn get-views []
+  (let [db (get-connection-map)]
+    (with-open [con (jdbc/get-connection db)]
+      (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
+          ;; return a java.sql.ResultSet describing all views:
+          (.getTables nil nil nil (into-array ["VIEW"]))
           (jdbc-rs/datafiable-result-set db)))))
 
 (defn print-rs [query-res]

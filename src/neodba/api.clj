@@ -48,6 +48,9 @@
                 (= "(get-tables)" input)
                 (dba/get-tables)
 
+                (= "(get-views)" input)
+                (dba/get-views)
+
                 :else
                 (dba/execute input)))
             (catch Exception ex
