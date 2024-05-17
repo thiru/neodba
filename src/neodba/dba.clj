@@ -54,7 +54,9 @@
 
 (defn print-rs [query-res]
   (let [rows (mapv #(update-keys % name) query-res)]
-    (pp/print-table rows)))
+    (if (empty? rows)
+      (println "NO RESULTS")
+      (pp/print-table rows))))
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
