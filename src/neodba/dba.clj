@@ -25,6 +25,15 @@
                        [sql]
                        {:builder-fn jdbc-rs/as-unqualified-maps})))))
 
+(defn get-catalogs []
+  (let [db (get-connection-map)]
+    (with-open [con (jdbc/get-connection db)]
+      (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
+          ;; return a java.sql.ResultSet describing all tables and views:
+          (.getCatalogs)
+          (jdbc-rs/datafiable-result-set db {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+          (->> (map (fn [x] {:name (:table_cat x)})))))))
+
 (defn get-schemas []
   (let [db (get-connection-map)]
     (with-open [con (jdbc/get-connection db)]

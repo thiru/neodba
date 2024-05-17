@@ -42,6 +42,9 @@
           (try
             (dba/print-rs
               (cond
+                (= "(get-catalogs)" input)
+                (dba/get-catalogs)
+
                 (= "(get-schemas)" input)
                 (dba/get-schemas)
 
