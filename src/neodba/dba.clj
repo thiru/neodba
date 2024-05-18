@@ -6,27 +6,36 @@
     [clojure.string :as str]
     [next.jdbc :as jdbc]
     [next.jdbc.result-set :as jdbc-rs]
-    [neodba.utils.common :as u]))
+    [neodba.utils.common :as u]
+    [neodba.utils.results :as r]))
 
 
 (set! *warn-on-reflection* true) ; for graalvm
 
 
-(defn get-connection-map []
-  (-> (slurp "db-spec.edn")
-      (edn/read-string)))
+(def db-spec-file "db-spec.edn")
+
+
+(defn get-connection-spec []
+  (let [file (u/slurp-file db-spec-file)]
+    (if (r/failed? file)
+      (r/print-msg
+        (r/r :error
+             (format "File specifying database connection (%s) was not found in CWD"
+                     db-spec-file)))
+      (edn/read-string file))))
 
 (defn execute [sql]
   (if (str/blank? sql)
     []
-    (let [db (get-connection-map)]
+    (when-let [db (get-connection-spec)]
       (with-open [con (jdbc/get-connection db)]
         (jdbc/execute! con
                        [sql]
                        {:builder-fn jdbc-rs/as-unqualified-maps})))))
 
 (defn get-catalogs []
-  (let [db (get-connection-map)]
+  (when-let [db (get-connection-spec)]
     (with-open [con (jdbc/get-connection db)]
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all tables and views:
@@ -35,7 +44,7 @@
           (->> (map (fn [x] {:name (:table_cat x)})))))))
 
 (defn get-schemas []
-  (let [db (get-connection-map)]
+  (when-let [db (get-connection-spec)]
     (with-open [con (jdbc/get-connection db)]
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all tables and views:
@@ -44,7 +53,7 @@
           (->> (map (fn [x] {:name (:table_schem x)})))))))
 
 (defn get-tables []
-  (let [db (get-connection-map)]
+  (when-let [db (get-connection-spec)]
     (with-open [con (jdbc/get-connection db)]
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all tables:
@@ -53,7 +62,7 @@
           (->> (map (fn [x] {:name (:table_name x)})))))))
 
 (defn get-views []
-  (let [db (get-connection-map)]
+  (when-let [db (get-connection-spec)]
     (with-open [con (jdbc/get-connection db)]
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all views:
