@@ -44,6 +44,15 @@
             (dba/execute sql)))
         (r/r :success "")))))
 
+(defn execute-file
+  [path]
+  (if (str/blank? path)
+    (r/r :error "No file provided")
+    (let [sql (slurp path)]
+      (if (str/blank? sql)
+        (r/r :error (str "No SQL in file: " path))
+        (execute-sql sql)))))
+
 (defn read-sql-from-stdin
   []
   (when @u/tty?

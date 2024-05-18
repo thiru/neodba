@@ -30,7 +30,7 @@ OPTIONS:
 
 SUB-COMMANDS:
 
-e, eval
+e, eval <SQL>
   Evaluates the following arguments as a SQL statement. In the example below the
   single quotes are used to avoid having to escape the asterisk as it's a
   special shell character:
@@ -43,6 +43,11 @@ e, eval
   neodba e '(get-schemas)'
   neodba e '(get-tables)'
   neodba e '(get-views)'
+
+f, file <PATH>
+  Evaluate SQL in the given file, e.g.:
+
+  neodba f some-file.sql
 
 r, repl
   Starts a REPL where you can enter SQL statements. It is recommended to run

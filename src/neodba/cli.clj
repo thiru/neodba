@@ -131,6 +131,9 @@
     ("e" "eval")
     (api/execute-sql (:sub-cmd-args cli-r))
 
+    ("f" "file")
+    (api/execute-file (-> cli-r :sub-cmd-args first))
+
     ("r" "repl")
     (api/read-sql-from-stdin)
 

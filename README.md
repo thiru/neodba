@@ -45,6 +45,14 @@ neodba e '(get-tables)'
 neodba e '(get-views)'
 ```
 
+#### f, file
+
+Evaluate SQL in the given file, e.g.:
+
+```
+neodba f some-file.sql
+```
+
 #### r, repl
 
 Starts a REPL where you can enter SQL statements.
