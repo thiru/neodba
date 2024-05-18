@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "Launching a Postgresql database instance in Docker..."
+
+docker run --rm -P -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD="postgres" --name pg postgres

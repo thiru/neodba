@@ -83,7 +83,6 @@
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
-  ;; Start Postgres instance in docker: docker run --rm -P -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD="postgres" --name pg postgres
   (print-with-db-spec #(execute-sql % "select * from artist limit 5"))
   (print-with-db-spec get-schemas)
   (print-with-db-spec get-tables))
