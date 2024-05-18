@@ -18,10 +18,25 @@
   [sql]
   (if (str/blank? sql)
     (r/r :warn "No SQL provided")
-    (do
+    (let [sql (str/trim sql)]
       (when @u/tty?
         (log (r/r :info (str "Executing SQL: " sql))))
-      (dba/print-rs (dba/execute sql))
+      (dba/print-rs
+        (cond
+          (= "(get-catalogs)" sql)
+          (dba/get-catalogs)
+
+          (= "(get-schemas)" sql)
+          (dba/get-schemas)
+
+          (= "(get-tables)" sql)
+          (dba/get-tables)
+
+          (= "(get-views)" sql)
+          (dba/get-views)
+
+          :else
+          (dba/execute sql)))
       (r/r :success ""))))
 
 (defn read-sql-from-stdin
@@ -38,22 +53,7 @@
           (println "Exiting..."))
         (do
           (try
-            (dba/print-rs
-              (cond
-                (= "(get-catalogs)" input)
-                (dba/get-catalogs)
-
-                (= "(get-schemas)" input)
-                (dba/get-schemas)
-
-                (= "(get-tables)" input)
-                (dba/get-tables)
-
-                (= "(get-views)" input)
-                (dba/get-views)
-
-                :else
-                (dba/execute input)))
+            (execute-sql input)
             (catch Exception ex
               (binding [*out* *err*]
                 (println (.toString ex)))))
