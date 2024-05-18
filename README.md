@@ -21,30 +21,37 @@ sudo mv neodba /usr/bin
 
 ## Usage
 
+### Config
+
 Create a file named **db-spec.edn** to specify how to connect to your database. This file must be in the current working directory when running neodba. See [db-spec.edn](./db-spec.edn) for a Postgresql example. For complete documentation [look here](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource).
 
-When run with arguments (which are not CLI option flags) the arguments are intrepreted as a SQL statement to execute.
+### Sub-commands
+
+#### e, eval
+
+Evaluates the following arguments as a SQL statement.
 In the example below the single quotes are used to avoid having to escape the asterisk as it's a special shell character:
 
 ```
-neodba 'select * from some_table'
+neodba e 'select * from some_table'
 ```
 
 There are a few helpers to retrieve database metadata such as the following:
 
 ```
-neodba '(get-catalogs)'
-neodba '(get-schemas)'
-neodba '(get-tables)'
-neodba '(get-views)'
+neodba e '(get-catalogs)'
+neodba e '(get-schemas)'
+neodba e '(get-tables)'
+neodba e '(get-views)'
 ```
 
-When no arguments are provided a REPL is started where you can enter SQL
-statements. It is recommended to run Neodba with rlwrap to get proper readline
-support (history, arrow keys, etc.), e.g.:
+#### r, repl
+
+Starts a REPL where you can enter SQL statements.
+It is recommended to run Neodba with rlwrap to get proper readline support (history, arrow keys, etc.):
 
 ```
-rlwrap neodba
+rlwrap neodba r
 ```
 
 ## Database Support

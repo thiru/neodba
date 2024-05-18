@@ -15,29 +15,34 @@
 
 
 (defn execute-sql
-  [sql]
-  (if (str/blank? sql)
-    (r/r :warn "No SQL provided")
-    (let [sql (str/trim sql)]
-      (when @u/tty?
-        (log (r/r :info (str "Executing SQL: " sql))))
-      (dba/print-rs
-        (cond
-          (= "(get-catalogs)" sql)
-          (dba/get-catalogs)
+  [input]
+  (let [sql (if (sequential? input)
+              (str/join " " input)
+              input)]
+    (if (str/blank? sql)
+      (do
+        (r/print-msg (r/r :warn "No SQL provided"))
+        (r/r :succes ""))
+      (let [sql (str/trim sql)]
+        (when @u/tty?
+          (log (r/r :info (str "Executing SQL: " sql))))
+        (dba/print-rs
+          (cond
+            (= "(get-catalogs)" sql)
+            (dba/get-catalogs)
 
-          (= "(get-schemas)" sql)
-          (dba/get-schemas)
+            (= "(get-schemas)" sql)
+            (dba/get-schemas)
 
-          (= "(get-tables)" sql)
-          (dba/get-tables)
+            (= "(get-tables)" sql)
+            (dba/get-tables)
 
-          (= "(get-views)" sql)
-          (dba/get-views)
+            (= "(get-views)" sql)
+            (dba/get-views)
 
-          :else
-          (dba/execute sql)))
-      (r/r :success ""))))
+            :else
+            (dba/execute sql)))
+        (r/r :success "")))))
 
 (defn read-sql-from-stdin
   []

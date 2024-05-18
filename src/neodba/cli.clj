@@ -102,13 +102,6 @@
                      extract-global-opts
                      extract-sub-cmd-and-args))
 
-(defn execute-sql
-  {:args (s/cat :_cli-r ::cli-r)
-   :ret ::cli-r}
-  [{:keys [sub-cmd sub-cmd-args] :as _cli-r}]
-  (let [sql (str sub-cmd " " (str/join " " sub-cmd-args))]
-    (api/execute-sql sql)))
-
 (defn set-log-level
   {:args (s/cat :_cli-r ::cli-r)
    :ret ::cli-r}
@@ -135,10 +128,21 @@
     "--version"
     (r/r :success version)
 
-    nil
+    ("e" "eval")
+    (api/execute-sql (:sub-cmd-args cli-r))
+
+    ("r" "repl")
     (api/read-sql-from-stdin)
 
-    (execute-sql cli-r)))
+    nil
+    (assoc cli-r
+           :level :error
+           :message "No sub-command provided. Try running: neodba --help")
+
+    (assoc cli-r
+           :level :error
+           :message (format "Unrecognised sub-command: %s. Try running: neodba --help"
+                            (:sub-cmd cli-r)))))
 
 (defn run
   "Execute the command specified by the given arguments."
