@@ -20,29 +20,25 @@
               (str/join " " input)
               input)]
     (if (str/blank? sql)
-      (do
-        (r/print-msg (r/r :warn "No SQL provided"))
-        (r/r :succes ""))
+      (r/r :warn "No SQL provided")
       (let [sql (str/trim sql)]
         (when @u/tty?
           (log (r/r :info (u/elide (str "Executing SQL: " sql) 100))))
-        (dba/print-rs
-          (cond
-            (= "(get-catalogs)" sql)
-            (dba/get-catalogs)
+        (cond
+          (= "(get-catalogs)" sql)
+          (dba/print-with-db-spec dba/get-catalogs)
 
-            (= "(get-schemas)" sql)
-            (dba/get-schemas)
+          (= "(get-schemas)" sql)
+          (dba/print-with-db-spec dba/get-schemas)
 
-            (= "(get-tables)" sql)
-            (dba/get-tables)
+          (= "(get-tables)" sql)
+          (dba/print-with-db-spec dba/get-tables)
 
-            (= "(get-views)" sql)
-            (dba/get-views)
+          (= "(get-views)" sql)
+          (dba/print-with-db-spec dba/get-views)
 
-            :else
-            (dba/execute sql)))
-        (r/r :success "")))))
+          :else
+          (dba/print-with-db-spec #(dba/execute-sql % sql)))))))
 
 (defn execute-file
   [path]
