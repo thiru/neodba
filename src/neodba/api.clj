@@ -25,7 +25,7 @@
         (r/r :succes ""))
       (let [sql (str/trim sql)]
         (when @u/tty?
-          (log (r/r :info (str "Executing SQL: " sql))))
+          (log (r/r :info (u/elide (str "Executing SQL: " sql) 100))))
         (dba/print-rs
           (cond
             (= "(get-catalogs)" sql)
