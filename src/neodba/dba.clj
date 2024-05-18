@@ -31,7 +31,7 @@
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all tables and views:
           (.getCatalogs)
-          (jdbc-rs/datafiable-result-set db {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+          (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
           (->> (map (fn [x] {:name (:table_cat x)})))))))
 
 (defn get-schemas []
@@ -40,7 +40,7 @@
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all tables and views:
           (.getSchemas)
-          (jdbc-rs/datafiable-result-set db {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+          (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
           (->> (map (fn [x] {:name (:table_schem x)})))))))
 
 (defn get-tables []
@@ -49,7 +49,7 @@
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all tables:
           (.getTables nil nil nil (into-array ["TABLE"]))
-          (jdbc-rs/datafiable-result-set db {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+          (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
           (->> (map (fn [x] {:name (:table_name x)})))))))
 
 (defn get-views []
@@ -58,7 +58,7 @@
       (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
           ;; return a java.sql.ResultSet describing all views:
           (.getTables nil nil nil (into-array ["VIEW"]))
-          (jdbc-rs/datafiable-result-set db {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+          (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
           (->> (map (fn [x] {:name (:table_name x)})))))))
 
 (defn print-rs [query-res]
