@@ -22,8 +22,9 @@
   (let [file (u/slurp-file db-spec-file)]
     (if (r/failed? file)
       (r/r :error
-           (format "File specifying database connection (%s) was not found in CWD"
-                   db-spec-file))
+           (format "File specifying database connection (%s) was not found in CWD (%s)"
+                   db-spec-file
+                   (System/getProperty "user.dir")))
       (edn/read-string file))))
 
 (defn execute-sql
