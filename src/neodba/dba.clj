@@ -78,9 +78,11 @@
 
 (defn print-with-db-spec
   [sql-exec]
-  (r/while-success-> (get-db-spec)
-                     (sql-exec)
-                     (print-rs)))
+  (let [res (r/while-success-> (get-db-spec)
+                               (sql-exec)
+                               (print-rs))]
+    (when (r/failed? res)
+      (r/print-msg res))))
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
