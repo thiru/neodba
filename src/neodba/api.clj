@@ -37,6 +37,15 @@
           (= "(get-views)" sql)
           (dba/print-with-db-spec dba/get-views)
 
+          (str/starts-with? sql "(get-columns")
+          (let [match (re-find #"\(get-columns(\+)?\s+['\"]?(\w+)['\"]?\)" sql)
+                verbose? (second match)
+                table-name (nth match 2 nil)]
+            (if table-name
+              (dba/print-with-db-spec #(dba/get-columns % table-name :verbose? verbose?))
+              (r/print-msg
+                (r/r :error (str "Invalid metadata query: " sql)))))
+
           :else
           (dba/print-with-db-spec #(dba/execute-sql % sql)))))))
 

@@ -45,6 +45,7 @@ e, eval <SQL>
   neodba e '(get-schemas)'
   neodba e '(get-tables)'
   neodba e '(get-views)'
+  neodba e '(get-columns some_table)'
 
 f, file <PATH>
   Evaluate SQL in the given file, e.g.:

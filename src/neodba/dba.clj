@@ -68,6 +68,20 @@
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
         (->> (map (fn [x] {:name (:table_name x)}))))))
 
+(defn get-columns
+  [db-spec table-name & {:keys [verbose?]}]
+  (with-open [con (jdbc/get-connection db-spec)]
+    (-> (.getMetaData con)
+        (.getColumns nil nil table-name nil)
+        (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+        (->> (map (fn [x]
+                    (if verbose?
+                      x
+                      {:name (:column_name x)
+                       :type (:type_name x)
+                       :size (:column_size x)
+                       :nullable? (:is_nullable x)})))))))
+
 (defn print-rs
   [query-res]
   (let [rows (mapv #(update-keys % name) query-res)]
@@ -88,4 +102,6 @@
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
   (print-with-db-spec #(execute-sql % "select * from artist limit 5"))
   (print-with-db-spec get-schemas)
-  (print-with-db-spec get-tables))
+  (print-with-db-spec get-tables)
+  (print-with-db-spec #(get-columns % "artist"))
+  (print-with-db-spec #(get-columns % "artist" :verbose? true)))
