@@ -56,7 +56,7 @@
   [db-spec]
   (with-open [con (jdbc/get-connection db-spec)]
     (-> (.getMetaData con)
-        (.getTables nil nil nil (into-array ["TABLE"]))
+        (.getTables nil (:schema db-spec) nil (into-array ["TABLE"]))
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
         (->> (map (fn [x] {:name (:table_name x)}))))))
 
@@ -64,7 +64,7 @@
   [db-spec]
   (with-open [con (jdbc/get-connection db-spec)]
     (-> (.getMetaData con)
-        (.getTables nil nil nil (into-array ["VIEW"]))
+        (.getTables nil (:schema db-spec) nil (into-array ["VIEW"]))
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
         (->> (map (fn [x] {:name (:table_name x)}))))))
 
@@ -72,7 +72,7 @@
   [db-spec table-name & {:keys [verbose?]}]
   (with-open [con (jdbc/get-connection db-spec)]
     (-> (.getMetaData con)
-        (.getColumns nil nil table-name nil)
+        (.getColumns nil (:schema db-spec) table-name nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
         (->> (map (fn [x]
                     (if verbose?
@@ -103,5 +103,6 @@
   (print-with-db-spec #(execute-sql % "select * from artist limit 5"))
   (print-with-db-spec get-schemas)
   (print-with-db-spec get-tables)
+  (print-with-db-spec get-views)
   (print-with-db-spec #(get-columns % "artist"))
   (print-with-db-spec #(get-columns % "artist" :verbose? true)))
