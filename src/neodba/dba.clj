@@ -112,6 +112,15 @@
                                          (mapv #(str (:name %) " " (:type %)))
                                          (str/join ", "))}))))))
 
+(defn get-procedure-columns
+  [db-spec proc-name]
+  (with-open [con (jdbc/get-connection db-spec)]
+    (-> (.getMetaData con)
+        (.getFunctionColumns nil (:schema db-spec) proc-name nil)
+        (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+        (->> (map (fn [x] {:name (:column_name x)
+                           :type (:type_name x)}))))))
+
 (defn get-procedures
   [db-spec]
   (with-open [con (jdbc/get-connection db-spec)]
@@ -119,7 +128,10 @@
         (.getProcedures nil (:schema db-spec) nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
         (->> (map (fn [x] {:name (:procedure_name x)
-                           :type (:procedure_type x)}))))))
+                           :type (:procedure_type x)
+                           :columns (->> (get-procedure-columns db-spec (:procedure_name x))
+                                         (mapv #(str (:name %) " " (:type %)))
+                                         (str/join ", "))}))))))
 
 (defn print-rs
   [query-res]
@@ -147,6 +159,7 @@
   (print-with-db-spec get-views)
   (print-with-db-spec #(get-function-columns % "add"))
   (print-with-db-spec get-functions)
+  (print-with-db-spec #(get-procedure-columns % "insert_data"))
   (print-with-db-spec get-procedures)
   (print-with-db-spec #(get-columns % "artist"))
   (print-with-db-spec #(get-columns % "artist" :verbose? true)))
