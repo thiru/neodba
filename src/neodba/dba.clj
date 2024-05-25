@@ -91,6 +91,15 @@
                        :size (:column_size x)
                        :nullable? (:is_nullable x)})))))))
 
+(defn get-function-columns
+  [db-spec func-name]
+  (with-open [con (jdbc/get-connection db-spec)]
+    (-> (.getMetaData con)
+        (.getFunctionColumns nil (:schema db-spec) func-name nil)
+        (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+        (->> (map (fn [x] {:name (:column_name x)
+                           :type (:type_name x)}))))))
+
 (defn get-functions
   [db-spec]
   (with-open [con (jdbc/get-connection db-spec)]
@@ -98,7 +107,10 @@
         (.getFunctions nil (:schema db-spec) nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
         (->> (map (fn [x] {:name (:function_name x)
-                           :type (:function_type x)}))))))
+                           :type (:function_type x)
+                           :columns (->> (get-function-columns db-spec (:function_name x))
+                                         (mapv #(str (:name %) " " (:type %)))
+                                         (str/join ", "))}))))))
 
 (defn get-procedures
   [db-spec]
@@ -133,6 +145,7 @@
   (print-with-db-spec get-schemas)
   (print-with-db-spec get-tables)
   (print-with-db-spec get-views)
+  (print-with-db-spec #(get-function-columns % "add"))
   (print-with-db-spec get-functions)
   (print-with-db-spec get-procedures)
   (print-with-db-spec #(get-columns % "artist"))
