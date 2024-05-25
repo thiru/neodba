@@ -40,6 +40,9 @@
           (= "(get-views)" sql)
           (dba/print-with-db-spec dba/get-views)
 
+          (= "(get-functions)" sql)
+          (dba/print-with-db-spec dba/get-functions)
+
           (str/starts-with? sql "(get-columns")
           (let [match (re-find #"\(get-columns(\+)?\s+['\"]?(\w+)['\"]?\)" sql)
                 verbose? (second match)

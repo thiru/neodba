@@ -45,6 +45,7 @@ neodba e '(get-schemas)'
 neodba e '(get-tables)'
 neodba e '(get-views)'
 neodba e '(get-columns some_table)'
+neodba e '(get-functions)'
 ```
 
 #### f, file

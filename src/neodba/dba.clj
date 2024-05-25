@@ -91,6 +91,15 @@
                        :size (:column_size x)
                        :nullable? (:is_nullable x)})))))))
 
+(defn get-functions
+  [db-spec]
+  (with-open [con (jdbc/get-connection db-spec)]
+    (-> (.getMetaData con)
+        (.getFunctions nil (:schema db-spec) nil)
+        (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
+        (->> (map (fn [x] {:name (:function_name x)
+                           :type (:function_type x)}))))))
+
 (defn print-rs
   [query-res]
   (let [rows (mapv #(update-keys % name) query-res)]
@@ -115,5 +124,6 @@
   (print-with-db-spec get-schemas)
   (print-with-db-spec get-tables)
   (print-with-db-spec get-views)
+  (print-with-db-spec get-functions)
   (print-with-db-spec #(get-columns % "artist"))
   (print-with-db-spec #(get-columns % "artist" :verbose? true)))
