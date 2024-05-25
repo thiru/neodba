@@ -41,6 +41,7 @@ e, eval <SQL>
 
   There are a few helpers to retrieve database metadata such as the following:
 
+  neodba e '(get-database-info)'
   neodba e '(get-catalogs)'
   neodba e '(get-schemas)'
   neodba e '(get-tables)'

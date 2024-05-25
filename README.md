@@ -39,6 +39,7 @@ neodba e 'select * from some_table'
 There are a few helpers to retrieve database metadata such as the following:
 
 ```
+neodba e '(get-database-info)'
 neodba e '(get-catalogs)'
 neodba e '(get-schemas)'
 neodba e '(get-tables)'

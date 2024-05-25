@@ -25,6 +25,9 @@
         (when @u/tty?
           (log (r/r :info (u/elide (str "Executing SQL: " sql) 100))))
         (cond
+          (= "(get-database-info)" sql)
+          (dba/print-with-db-spec dba/get-database-info)
+
           (= "(get-catalogs)" sql)
           (dba/print-with-db-spec dba/get-catalogs)
 

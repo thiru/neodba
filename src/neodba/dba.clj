@@ -36,6 +36,15 @@
                      [sql]
                      {:builder-fn jdbc-rs/as-unqualified-maps}))))
 
+(defn get-database-info
+  [db-spec]
+  (with-open [con (jdbc/get-connection db-spec)]
+    (let [md (.getMetaData con)]
+      [{:name (.getDatabaseProductName md)
+        :major-version (.getDatabaseMajorVersion md)
+        :minor-version (.getDatabaseMinorVersion md)
+        :product-version (.getDatabaseProductVersion md)}])))
+
 (defn get-catalogs
   [db-spec]
   (with-open [con (jdbc/get-connection db-spec)]
@@ -101,6 +110,8 @@
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
   (print-with-db-spec #(execute-sql % "select * from artist limit 5"))
+  (print-with-db-spec get-database-info)
+  (print-with-db-spec get-catalogs)
   (print-with-db-spec get-schemas)
   (print-with-db-spec get-tables)
   (print-with-db-spec get-views)
