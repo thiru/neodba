@@ -71,3 +71,10 @@ rlwrap neodba r
 **Postgresql** is currently the only supported database.
 
 Since, at this stage, Neodba is essentially a POC, I didn't want to put the effort into supporting any additional databases. Though in theory it should be quite easy to add additional databases since the communication is done via JDBC. I.e. it should be as easy as including additional JDBC drivers.
+
+## Development
+
+### References
+
+- [next-jdbc](https://github.com/seancorfield/next-jdbc) (a Clojure JDBC wrapper) is the primary interface to the database
+- The [DatabaseMetaData](https://docs.oracle.com/en/java/javase/22/docs/api/java.sql/java/sql/DatabaseMetaData.html) interface is leveraged to provide database metadata such as available tables, table columns, available functions, etc.
