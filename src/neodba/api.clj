@@ -89,3 +89,7 @@
             (println))
           (recur)))))
   (r/r :success ""))
+
+
+(comment
+  (execute-sql "select * from artist limit 3"))

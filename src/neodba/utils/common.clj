@@ -49,10 +49,12 @@
   {:args (s/cat :result ::r/result)
    :ret nil?}
   [result]
-  (r/print-msg result)
-  (System/exit (case (:level result)
-                 (:success :trace :info :warn :debug) 0
-                 1)))
+  (when result
+    (r/print-msg result)
+    (System/exit (case (:level result)
+                   (:success :trace :info :warn :debug) 0
+                   1)))
+  (System/exit 0))
 
 
 (defn elide
