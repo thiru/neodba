@@ -27,18 +27,27 @@
                    (System/getProperty "user.dir")))
       (edn/read-string file))))
 
+(defn get-connection
+  "Get a connection object for the given database spec and set the schema (if applicable)"
+  ^java.sql.Connection [db-spec]
+  (let [con (jdbc/get-connection db-spec)
+        schema (:schema db-spec)]
+    (when (not (str/blank? schema))
+      (.setSchema con schema))
+    con))
+
 (defn execute-sql
   [db-spec sql]
   (if (str/blank? sql)
     []
-    (with-open [con (jdbc/get-connection db-spec)]
+    (with-open [con (get-connection db-spec)]
       (jdbc/execute! con
                      [sql]
                      {:builder-fn jdbc-rs/as-unqualified-maps}))))
 
 (defn get-database-info
   [db-spec]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (let [md (.getMetaData con)]
       [{:name "database" :value (.getDatabaseProductName md)}
        {:name "version" :value (.getDatabaseProductVersion md)}
@@ -48,7 +57,7 @@
 
 (defn get-catalogs
   [db-spec]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getCatalogs)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -56,7 +65,7 @@
 
 (defn get-schemas
   [db-spec]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getSchemas)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -64,7 +73,7 @@
 
 (defn get-tables
   [db-spec]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getTables nil (:schema db-spec) nil (into-array ["TABLE"]))
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -72,7 +81,7 @@
 
 (defn get-views
   [db-spec]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getTables nil (:schema db-spec) nil (into-array ["VIEW"]))
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -80,7 +89,7 @@
 
 (defn get-columns
   [db-spec table-name & {:keys [verbose?]}]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getColumns nil (:schema db-spec) table-name nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -94,7 +103,7 @@
 
 (defn get-function-columns
   [db-spec func-name]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getFunctionColumns nil (:schema db-spec) func-name nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -103,7 +112,7 @@
 
 (defn get-functions
   [db-spec]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getFunctions nil (:schema db-spec) nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -115,7 +124,7 @@
 
 (defn get-procedure-columns
   [db-spec proc-name]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getFunctionColumns nil (:schema db-spec) proc-name nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -124,7 +133,7 @@
 
 (defn get-procedures
   [db-spec]
-  (with-open [con (jdbc/get-connection db-spec)]
+  (with-open [con (get-connection db-spec)]
     (-> (.getMetaData con)
         (.getProcedures nil (:schema db-spec) nil)
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
@@ -158,9 +167,9 @@
   (print-with-db-spec get-schemas)
   (print-with-db-spec get-tables)
   (print-with-db-spec get-views)
-  (print-with-db-spec #(get-function-columns % "add"))
   (print-with-db-spec get-functions)
-  (print-with-db-spec #(get-procedure-columns % "insert_data"))
+  (print-with-db-spec #(get-function-columns % "add"))
   (print-with-db-spec get-procedures)
+  (print-with-db-spec #(get-procedure-columns % "insert_data"))
   (print-with-db-spec #(get-columns % "artist"))
   (print-with-db-spec #(get-columns % "artist" :verbose? true)))
