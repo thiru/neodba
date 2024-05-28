@@ -40,10 +40,11 @@
   [db-spec]
   (with-open [con (jdbc/get-connection db-spec)]
     (let [md (.getMetaData con)]
-      [{:name (.getDatabaseProductName md)
-        :major-version (.getDatabaseMajorVersion md)
-        :minor-version (.getDatabaseMinorVersion md)
-        :product-version (.getDatabaseProductVersion md)}])))
+      [{:name "database" :value (.getDatabaseProductName md)}
+       {:name "version" :value (.getDatabaseProductVersion md)}
+       {:name "url" :value (.getURL md)}
+       {:name "catalog" :value (.getCatalog con)}
+       {:name "schema" :value (.getSchema con)}])))
 
 (defn get-catalogs
   [db-spec]
