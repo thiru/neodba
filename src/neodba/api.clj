@@ -13,10 +13,14 @@
 
 (def prompt "$ ")
 
+(defonce ^{:doc "Stores a config path which can be set/overridden in-process (e.g. from neodba.nvim)."}
+  inproc-config-path (atom nil))
+
 
 (defn execute-sql
   [config-path input]
-  (let [sql (if (sequential? input)
+  (let [config-path (or @inproc-config-path config-path)
+        sql (if (sequential? input)
               (str/join " " input)
               input)]
     (if (str/blank? sql)
@@ -55,6 +59,16 @@
               (r/print-msg
                 (r/r :error (str "Invalid metadata query: " sql)))))
 
+          (str/starts-with? sql "(set-config-path")
+          (let [match (re-find #"\(set-config-path\s+['\"](.+)['\"]\)" sql)
+                cfg-path (second match)]
+            (if cfg-path
+              (try
+                (reset! inproc-config-path (dba/resolve-config-path cfg-path))
+                (catch Exception ex
+                  (r/print-msg (r/r :error (.toString ex)))))
+              (reset! inproc-config-path nil)))
+
           :else
           (dba/print-with-db-spec config-path #(dba/execute-sql % sql)))))))
 
@@ -92,4 +106,6 @@
 
 
 (comment
-  (execute-sql "" "select * from artist limit 3"))
+  (execute-sql "" "select * from artist limit 3")
+  (execute-sql "" "(set-config-path 'test')")
+  @inproc-config-path)
