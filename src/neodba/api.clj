@@ -15,7 +15,7 @@
 
 
 (defn execute-sql
-  [input]
+  [config-path input]
   (let [sql (if (sequential? input)
               (str/join " " input)
               input)]
@@ -26,49 +26,49 @@
           (log (r/r :info (u/elide (str "Executing SQL: " sql) 100))))
         (cond
           (= "(get-database-info)" sql)
-          (dba/print-with-db-spec dba/get-database-info)
+          (dba/print-with-db-spec config-path dba/get-database-info)
 
           (= "(get-catalogs)" sql)
-          (dba/print-with-db-spec dba/get-catalogs)
+          (dba/print-with-db-spec config-path dba/get-catalogs)
 
           (= "(get-schemas)" sql)
-          (dba/print-with-db-spec dba/get-schemas)
+          (dba/print-with-db-spec config-path dba/get-schemas)
 
           (= "(get-tables)" sql)
-          (dba/print-with-db-spec dba/get-tables)
+          (dba/print-with-db-spec config-path dba/get-tables)
 
           (= "(get-views)" sql)
-          (dba/print-with-db-spec dba/get-views)
+          (dba/print-with-db-spec config-path dba/get-views)
 
           (= "(get-functions)" sql)
-          (dba/print-with-db-spec dba/get-functions)
+          (dba/print-with-db-spec config-path dba/get-functions)
 
           (= "(get-procedures)" sql)
-          (dba/print-with-db-spec dba/get-procedures)
+          (dba/print-with-db-spec config-path dba/get-procedures)
 
           (str/starts-with? sql "(get-columns")
           (let [match (re-find #"\(get-columns(\+)?\s+['\"]?(\w+)['\"]?\)" sql)
                 verbose? (second match)
                 table-name (nth match 2 nil)]
             (if table-name
-              (dba/print-with-db-spec #(dba/get-columns % table-name :verbose? verbose?))
+              (dba/print-with-db-spec config-path #(dba/get-columns % table-name :verbose? verbose?))
               (r/print-msg
                 (r/r :error (str "Invalid metadata query: " sql)))))
 
           :else
-          (dba/print-with-db-spec #(dba/execute-sql % sql)))))))
+          (dba/print-with-db-spec config-path #(dba/execute-sql % sql)))))))
 
 (defn execute-file
-  [path]
+  [config-path path]
   (if (str/blank? path)
     (r/r :error "No file provided")
     (let [sql (slurp path)]
       (if (str/blank? sql)
         (r/r :error (str "No SQL in file: " path))
-        (execute-sql sql)))))
+        (execute-sql config-path sql)))))
 
 (defn read-sql-from-stdin
-  []
+  [config-path]
   (when @u/tty?
     (log (r/r :info "Reading SQL from stdin... (to exit press CTRL-D or type 'quit')")))
   (loop []
@@ -81,7 +81,7 @@
           (println "Exiting..."))
         (do
           (try
-            (execute-sql input)
+            (execute-sql config-path input)
             (catch Exception ex
               (binding [*out* *err*]
                 (println (.toString ex)))))
@@ -92,4 +92,4 @@
 
 
 (comment
-  (execute-sql "select * from artist limit 3"))
+  (execute-sql "" "select * from artist limit 3"))

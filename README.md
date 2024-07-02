@@ -23,7 +23,10 @@ sudo mv neodba /usr/bin
 
 ### Config
 
-Create a file named **db-spec.edn** to specify how to connect to your database. This file must be in the current working directory when running neodba. See [db-spec.edn](./db-spec.edn) for a Postgresql example. For complete documentation [look here](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource).
+Create a file named **db-spec.edn** to specify how to connect to your database.
+The default location for this file is your current working directory (relative to where neodba was started).
+See [db-spec.edn](./db-spec.edn) for a Postgresql example.
+For complete documentation [look here](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource).
 
 ### Sub-commands
 

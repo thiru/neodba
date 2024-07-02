@@ -33,7 +33,7 @@
 
 (def global-kvp-opts
   "A set of global options that require a value."
-  #{"--log-level"})
+  #{"--config" "--log-level"})
 
 
 (def version (-> (slurp "VERSION") str/trim))
@@ -117,35 +117,45 @@
                                     keyword)))
       cli-r)))
 
+(defn get-config-override
+  {:args (s/cat :_cli-r ::cli-r)
+   :ret string?}
+  [{:keys [global-kvp-opts] :as _cli-r}]
+  (->> global-kvp-opts
+       (u/find-first (fn [[k _v]]
+                       (= k "--config")))
+       second))
+
 (defn run-sub-cmd
   {:args (s/cat :cli-r ::cli-r)
    :ret ::cli-r}
   [{:keys [sub-cmd] :as cli-r}]
-  (case sub-cmd
-    ("-h" "--help")
-    (r/r :success help)
+  (let [config-path (get-config-override cli-r)]
+    (case sub-cmd
+      ("-h" "--help")
+      (r/r :success help)
 
-    "--version"
-    (r/r :success version)
+      "--version"
+      (r/r :success version)
 
-    ("e" "eval")
-    (api/execute-sql (:sub-cmd-args cli-r))
+      ("e" "eval")
+      (api/execute-sql config-path (:sub-cmd-args cli-r))
 
-    ("f" "file")
-    (api/execute-file (-> cli-r :sub-cmd-args first))
+      ("f" "file")
+      (api/execute-file config-path (-> cli-r :sub-cmd-args first))
 
-    ("r" "repl")
-    (api/read-sql-from-stdin)
+      ("r" "repl")
+      (api/read-sql-from-stdin config-path)
 
-    nil
-    (assoc cli-r
-           :level :error
-           :message "No sub-command provided. Try running: neodba --help")
+      nil
+      (assoc cli-r
+             :level :error
+             :message "No sub-command provided. Try running: neodba --help")
 
-    (assoc cli-r
-           :level :error
-           :message (format "Unrecognised sub-command: %s. Try running: neodba --help"
-                            (:sub-cmd cli-r)))))
+      (assoc cli-r
+             :level :error
+             :message (format "Unrecognised sub-command: %s. Try running: neodba --help"
+                              (:sub-cmd cli-r))))))
 
 (defn run
   "Execute the command specified by the given arguments."
@@ -161,4 +171,5 @@
 (comment
   (parse-cli-args [])
   (parse-cli-args ["--version"])
+  (parse-cli-args ["--config" "test/" "e" "select * from artists"])
   (parse-cli-args ["--log-level" "info" "exec" "select * from users"]))

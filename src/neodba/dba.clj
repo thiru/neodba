@@ -2,6 +2,7 @@
   "Database access layer."
   (:require
     [clojure.edn :as edn]
+    [clojure.java.io :as io]
     [clojure.pprint :as pp]
     [clojure.string :as str]
     [next.jdbc :as jdbc]
@@ -16,10 +17,28 @@
 (def db-spec-file "db-spec.edn")
 
 
+(defn resolve-config-path
+  "Resolve path to config file.
+  `path` should be a directory containing db-spec.edn or specify the config file itself."
+  [path]
+  (if (str/blank? path)
+    db-spec-file
+    (let [path-obj (io/file path)]
+      (cond
+        (.isDirectory path-obj)
+        (u/join-paths path db-spec-file)
+
+        (.exists path-obj)
+        path
+
+        :else
+        (throw (ex-info (str "Failed to resolve config path: " path)
+                        {:path path}))))))
+
 (defn get-db-spec
-  "Get file specifying database connection string from the CWD."
-  []
-  (let [file (u/slurp-file db-spec-file)]
+  "Get database connection spec."
+  [config-path]
+  (let [file (u/slurp-file (resolve-config-path config-path))]
     (if (r/failed? file)
       (r/r :error
            (format "File specifying database connection (%s) was not found in CWD (%s)"
@@ -152,8 +171,8 @@
   (r/r :success ""))
 
 (defn print-with-db-spec
-  [sql-exec]
-  (let [res (r/while-success-> (get-db-spec)
+  [config-path sql-exec]
+  (let [res (r/while-success-> (get-db-spec config-path)
                                (sql-exec)
                                (print-rs))]
     (when (r/failed? res)
@@ -161,15 +180,16 @@
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
-  (print-with-db-spec #(execute-sql % "select * from artist limit 5"))
-  (print-with-db-spec get-database-info)
-  (print-with-db-spec get-catalogs)
-  (print-with-db-spec get-schemas)
-  (print-with-db-spec get-tables)
-  (print-with-db-spec get-views)
-  (print-with-db-spec get-functions)
-  (print-with-db-spec #(get-function-columns % "add"))
-  (print-with-db-spec get-procedures)
-  (print-with-db-spec #(get-procedure-columns % "insert_data"))
-  (print-with-db-spec #(get-columns % "artist"))
-  (print-with-db-spec #(get-columns % "artist" :verbose? true)))
+  (print-with-db-spec "" #(execute-sql % "select * from artist limit 5"))
+  (print-with-db-spec "test/db-spec.edn" #(execute-sql % "select * from artist limit 5"))
+  (print-with-db-spec "" get-database-info)
+  (print-with-db-spec "" get-catalogs)
+  (print-with-db-spec "" get-schemas)
+  (print-with-db-spec "" get-tables)
+  (print-with-db-spec "" get-views)
+  (print-with-db-spec "" get-functions)
+  (print-with-db-spec "" #(get-function-columns % "add"))
+  (print-with-db-spec "" get-procedures)
+  (print-with-db-spec "" #(get-procedure-columns % "insert_data"))
+  (print-with-db-spec "" #(get-columns % "artist"))
+  (print-with-db-spec "" #(get-columns % "artist" :verbose? true)))

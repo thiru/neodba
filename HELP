@@ -7,8 +7,9 @@ USAGE: neodba [<OPTIONS>] [<SUB-COMMAND>] [<SUB-COMMAND ARGS>]
 CONFIG:
 
 Create a file named db-spec.edn to specify how to connect to your database.
-This file must be in the current working directory when running neodba.
-The following is a Postgresql example. For complete documentation see:
+The default location for this file is your current working directory
+(relative to where neodba was started). The following is a Postgresql example.
+For complete documentation see:
 https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource
 
   {:dbtype "postgres"
@@ -19,6 +20,10 @@ https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get
    :password "postgres"}
 
 OPTIONS:
+
+--config <PATH>
+  You can override the path to the config with a path to a directory or file
+  When specified this is the only config that is used
 
 --log-level [FATAL|ERROR|WARN|SUCCESS|INFO|DEBUG|TRACE]
   Specify the log level

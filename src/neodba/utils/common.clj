@@ -90,6 +90,16 @@
     (apply format formatter args)))
 
 
+(defn join-paths
+  "Join the given path segments.
+
+  If any of the segments are `nil` it will be ignored."
+  {:args (s/cat :segments (s/* (s/nilable string?)))
+   :ret string?}
+  [& segments]
+  (.toString ^java.io.File (apply io/file (map #(or % "") segments))))
+
+
 (defn rm-rf
   "Recursively delete a directory (or file if given one instead).
 
