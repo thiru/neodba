@@ -16,8 +16,8 @@
 (def db-spec-file "db-spec.edn")
 
 
-(defn get-db-spec
-  "Get file specifying database connection string from the CWD."
+(defn read-db-specs
+  "Read EDN file specifying database connections from the CWD."
   []
   (let [file (u/slurp-file db-spec-file)]
     (if (r/failed? file)
@@ -26,6 +26,17 @@
                    db-spec-file
                    (System/getProperty "user.dir")))
       (edn/read-string file))))
+
+(defn get-active-db-spec
+  "Get the active database spec from all defined in `db-specs`.
+  I.e. the first one with `:active` being truthy."
+  [db-specs]
+  (if (empty? db-specs)
+    (first db-specs)
+    (or (some #(when (get % :active)
+                 %)
+              db-specs)
+        (first db-specs))))
 
 (defn get-connection
   "Get a connection object for the given database spec and set the schema (if applicable)"
@@ -153,7 +164,8 @@
 
 (defn print-with-db-spec
   [sql-exec]
-  (let [res (r/while-success-> (get-db-spec)
+  (let [res (r/while-success-> (read-db-specs)
+                               (get-active-db-spec)
                                (sql-exec)
                                (print-rs))]
     (when (r/failed? res)

@@ -6,17 +6,20 @@ USAGE: neodba [<OPTIONS>] [<SUB-COMMAND>] [<SUB-COMMAND ARGS>]
 
 CONFIG:
 
-Create a file named db-spec.edn to specify how to connect to your database.
+Create a file named db-spec.edn that specifies all your database connections.
 This file must be in the current working directory when running neodba.
+The first connection with `:active` being truthy will be used.
 The following is a Postgresql example. For complete documentation see:
 https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource
 
-  {:dbtype "postgres"
-   :host "localhost"
-   :port 5432
-   :dbname "postgres"
-   :user "postgres"
-   :password "postgres"}
+  [{:name "default"
+    :active true
+    :dbtype "postgres"
+    :host "localhost"
+    :port 5432
+    :dbname "postgres"
+    :user "postgres"
+    :password "postgres"}]
 
 OPTIONS:
 
