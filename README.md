@@ -2,19 +2,19 @@
 
 **NOTE: This is alpha-quality software, full of rough edges and severely lacking in features.**
 
-Neodba is a simple, depedency-free CLI tool for interacting with databases.
+Neodba is a simple, depedency-free CLI tool for interacting with databases and serves as the base for this [Neovim plugin](https://github.com/thiru/neodba.nvim)
 
 ## Rationale
 
-The main reason I wrote this app is to serve as the sole dependency of [this Neovim plugin](https://github.com/thiru/neodba.nvim). To meet this requirement the Neodba binary is a [single, static, native executable](https://www.graalvm.org/latest/reference-manual/native-image/guides/build-static-executables/). I.e. even though Neodba is written in Clojure it has **no runtime requirements**, including the JVM nor even libc.
+I wanted a Neovim database plugin that didn't require separate dependencies for each DBMS (e.g. psql for PostgreSQL, etc.). This CLI tools serves as this common base. It is written in Clojure and uses JDBC to communicate with the supported DBMS'. It is also a [single, static, native executable](https://www.graalvm.org/latest/reference-manual/native-image/guides/build-static-executables/) (with no system dependencies, not even libc).
 
 ## Installation
 
-*NOTE: only Linux x64 architecture is supported for now.*
+*NOTE: only Linux x64 architecture is currently supported.*
 
-Simply grab the binary from the Releases page and extract it to a location in your `PATH`, e.g.:
+Simply grab the latest binary from [Releases](https://github.com/thiru/neodba/releases) and extract it to a location in your `PATH`, e.g.:
 
-```
+```shell
 tar -xf neodba-VERSION-x86_64-linux.tar.gz
 sudo mv neodba /usr/bin
 ```
@@ -23,22 +23,22 @@ sudo mv neodba /usr/bin
 
 ### Config
 
-Create a file named **db-spec.edn** to specify how to connect to your database. This file must be in the current working directory when running neodba. See [db-spec.edn](./db-spec.edn) for a Postgresql example. For complete documentation [look here](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource).
+Create a file named **db-spec.edn** to specify how to connect to your database. This file must be in the current working directory when running neodba. See [db-spec.edn](./db-spec.edn) for a Postgresql example. For complete documentation see [this page](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource).
 
 ### Sub-commands
 
 #### e, eval
 
 Evaluates the following arguments as a SQL statement.
-In the example below the single quotes are used to avoid having to escape the asterisk as it's a special shell character:
+In the example below single quotes are used to avoid having to escape the asterisk as it's a special character in most shells:
 
-```
+```shell
 neodba e 'select * from some_table'
 ```
 
 There are a few helpers to retrieve database metadata such as the following:
 
-```
+```shell
 neodba e '(get-database-info)'
 neodba e '(get-catalogs)'
 neodba e '(get-schemas)'
@@ -53,7 +53,7 @@ neodba e '(get-procedures)'
 
 Evaluate SQL in the given file, e.g.:
 
-```
+```shell
 neodba f some-file.sql
 ```
 
@@ -62,7 +62,7 @@ neodba f some-file.sql
 Starts a REPL where you can enter SQL statements.
 It is recommended to run Neodba with rlwrap to get proper readline support (history, arrow keys, etc.):
 
-```
+```shell
 rlwrap neodba r
 ```
 
