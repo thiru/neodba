@@ -26,37 +26,37 @@
           (log (r/r :info (u/elide (str "Executing SQL: " sql) 100))))
         (cond
           (= "(get-database-info)" sql)
-          (dba/print-with-db-spec dba/get-database-info)
+          (dba/print-with-config dba/get-database-info)
 
           (= "(get-catalogs)" sql)
-          (dba/print-with-db-spec dba/get-catalogs)
+          (dba/print-with-config dba/get-catalogs)
 
           (= "(get-schemas)" sql)
-          (dba/print-with-db-spec dba/get-schemas)
+          (dba/print-with-config dba/get-schemas)
 
           (= "(get-tables)" sql)
-          (dba/print-with-db-spec dba/get-tables)
+          (dba/print-with-config dba/get-tables)
 
           (= "(get-views)" sql)
-          (dba/print-with-db-spec dba/get-views)
+          (dba/print-with-config dba/get-views)
 
           (= "(get-functions)" sql)
-          (dba/print-with-db-spec dba/get-functions)
+          (dba/print-with-config dba/get-functions)
 
           (= "(get-procedures)" sql)
-          (dba/print-with-db-spec dba/get-procedures)
+          (dba/print-with-config dba/get-procedures)
 
           (str/starts-with? sql "(get-columns")
           (let [match (re-find #"\(get-columns(\+)?\s+['\"]?(\w+)['\"]?\)" sql)
                 verbose? (second match)
                 table-name (nth match 2 nil)]
             (if table-name
-              (dba/print-with-db-spec #(dba/get-columns % table-name :verbose? verbose?))
+              (dba/print-with-config #(dba/get-columns % table-name :verbose? verbose?))
               (r/print-msg
                 (r/r :error (str "Invalid metadata query: " sql)))))
 
           :else
-          (dba/print-with-db-spec #(dba/execute-sql % sql)))))))
+          (dba/print-with-config #(dba/execute-sql % sql)))))))
 
 (defn execute-file
   [path]

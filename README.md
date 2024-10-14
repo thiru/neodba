@@ -23,10 +23,10 @@ sudo mv neodba /usr/bin
 
 ### Config
 
-Create a file named **db-spec.edn** that specifies all your database connections.
+Create a config file named **neodba.edn** to specify all your database connections.
 This file must be in the current working directory when running neodba.
-The first connection with `:active` being truthy will be used.
-See [db-spec.edn](./db-spec.edn) for a Postgresql example.
+The first `:db-spec` with `:active` being truthy will be used.
+See [neodba.edn](./neodba.edn) for a Postgresql example.
 For complete documentation see [this page](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource).
 
 ### Sub-commands

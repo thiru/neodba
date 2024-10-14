@@ -12,30 +12,31 @@
 (set! *warn-on-reflection* true) ; for graalvm
 
 
-(def db-spec-file "db-spec.edn")
+(def config-file "neodba.edn")
 
 
-(defn read-db-specs
+(defn read-config-file
   "Read EDN file specifying database connections from the CWD."
   []
-  (let [file (u/slurp-file db-spec-file)]
+  (let [file (u/slurp-file config-file)]
     (if (r/failed? file)
       (r/r :error
-           (format "File specifying database connection (%s) was not found in CWD (%s)"
-                   db-spec-file
+           (format "Config file, %s was not found in CWD: %s"
+                   config-file
                    (System/getProperty "user.dir")))
       (edn/read-string file))))
 
 (defn get-active-db-spec
-  "Get the active database spec from all defined in `db-specs`.
+  "Get the active database spec from the given config.
   I.e. the first one with `:active` being truthy."
-  [db-specs]
-  (if (empty? db-specs)
-    (first db-specs)
-    (or (some #(when (get % :active)
-                 %)
-              db-specs)
-        (first db-specs))))
+  [config]
+  (let [db-specs (:db-specs config)]
+    (if (empty? db-specs)
+      (first db-specs)
+      (or (some #(when (get % :active)
+                   %)
+                db-specs)
+          (first db-specs)))))
 
 (defn get-connection
   "Get a connection object for the given database spec and set the schema (if applicable)"
@@ -161,9 +162,9 @@
       (println (u/as-markdown-table rows))))
   (r/r :success ""))
 
-(defn print-with-db-spec
+(defn print-with-config
   [sql-exec]
-  (let [res (r/while-success-> (read-db-specs)
+  (let [res (r/while-success-> (read-config-file)
                                (get-active-db-spec)
                                (sql-exec)
                                (print-rs))]
@@ -172,15 +173,15 @@
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
-  (print-with-db-spec #(execute-sql % "select * from artist limit 5"))
-  (print-with-db-spec get-database-info)
-  (print-with-db-spec get-catalogs)
-  (print-with-db-spec get-schemas)
-  (print-with-db-spec get-tables)
-  (print-with-db-spec get-views)
-  (print-with-db-spec get-functions)
-  (print-with-db-spec #(get-function-columns % "add"))
-  (print-with-db-spec get-procedures)
-  (print-with-db-spec #(get-procedure-columns % "insert_data"))
-  (print-with-db-spec #(get-columns % "artist"))
-  (print-with-db-spec #(get-columns % "artist" :verbose? true)))
+  (print-with-config #(execute-sql % "select * from artist limit 5"))
+  (print-with-config get-database-info)
+  (print-with-config get-catalogs)
+  (print-with-config get-schemas)
+  (print-with-config get-tables)
+  (print-with-config get-views)
+  (print-with-config get-functions)
+  (print-with-config #(get-function-columns % "add"))
+  (print-with-config get-procedures)
+  (print-with-config #(get-procedure-columns % "insert_data"))
+  (print-with-config #(get-columns % "artist"))
+  (print-with-config #(get-columns % "artist" :verbose? true)))
