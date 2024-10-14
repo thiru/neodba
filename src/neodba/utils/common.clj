@@ -3,6 +3,7 @@
   (:refer-clojure :exclude [defn])
   (:require
     [clojure.java.io :as io]
+    [clojure.pprint :as pp]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.results :as r]
@@ -141,3 +142,18 @@
   (try
    (Float/parseFloat input)
    (catch Exception _ fallback)))
+
+
+(defn as-markdown-table
+  "Convert the given vector of maps as a markdown table."
+  [maps]
+  {:args (s/cat :maps (s/coll-of map?))
+   :ret string?}
+  (if (empty? maps)
+    ""
+    (-> (with-out-str (pp/print-table maps))
+        ;; NOTE: remove empty line `pp/print-table` creates at the beggining
+        (str/trim)
+        (str/split-lines)
+        (update 1 #(str/replace % #"\+" "|"))
+        (->> (str/join "\n")))))

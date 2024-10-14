@@ -2,7 +2,6 @@
   "Database access layer."
   (:require
     [clojure.edn :as edn]
-    [clojure.pprint :as pp]
     [clojure.string :as str]
     [next.jdbc :as jdbc]
     [next.jdbc.result-set :as jdbc-rs]
@@ -158,8 +157,8 @@
   [query-res]
   (let [rows (mapv #(update-keys % name) query-res)]
     (if (empty? rows)
-      (println "NO RESULTS")
-      (pp/print-table rows)))
+      (println "*NO RESULTS*")
+      (println (u/as-markdown-table rows))))
   (r/r :success ""))
 
 (defn print-with-db-spec
