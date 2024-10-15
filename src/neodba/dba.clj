@@ -154,20 +154,41 @@
                                          (mapv #(str (:name %) " " (:type %)))
                                          (str/join ", "))}))))))
 
-(defn result-set->markdown-output
+(defn process-query-res
+  "Format query result as a markdown table and capture row count."
   [query-res]
   (if (empty? query-res)
-    (r/r :warn "*NO RESULTS*")
-    (->> (mapv #(update-keys % name) query-res)
-         (u/as-markdown-table)
-         (r/r :success))))
+    (r/r :warn "\n*NO RESULTS*" {:row-count 0, :col-count 0})
+    (-> (mapv #(update-keys % name) query-res)
+        (u/as-markdown-table)
+        (as-> $ (r/r :success $ {:row-count (-> query-res count)
+                                 :col-count (-> query-res first keys count)})))))
+
+(defn output-header
+  [config result]
+  (let [active-db-spec (get-active-db-spec config)]
+    (str
+      (str/trim
+        (str
+          (when (:print-config-info config)
+            (format " **%s**: *%s* / *%s* / *%s* "
+                    (:name active-db-spec)
+                    (:host active-db-spec)
+                    (:dbname active-db-spec)
+                    (:schema active-db-spec)))
+          (when (:print-table-counts config)
+            (format "`%d x %d` "
+              (or (:row-count result) 0)
+              (or (:col-count result) 0)))))
+      "\n")))
 
 (defn print-result
   [config result]
-  (when (not (str/blank? (:write-to-file config)))
-    (spit (:write-to-file config) (:message result)))
-  (r/print-msg result)
-  result)
+  (let [result (r/prepend-msg result (output-header config result))]
+    (when (not (str/blank? (:write-to-file config)))
+      (spit (:write-to-file config) (:message result)))
+    (r/print-msg result)
+    result))
 
 (defn print-with-config
   [sql-exec]
@@ -176,20 +197,21 @@
       (let [res (r/while-success->> config
                                     (get-active-db-spec)
                                     (sql-exec)
-                                    (result-set->markdown-output)
+                                    (process-query-res)
                                     (print-result config))]
         (when (r/failed? res)
           (print-result config res)))
       (catch Exception ex
         (binding [*out* *err*]
-          (let [msg (format "The following exception occurred when running `%s`\n%s"
-                            sql-exec
+          (let [msg (format "An error occurred while running `%s`\n\n%s"
+                            (u/pretty-demunge sql-exec)
                             (.toString ex))]
             (print-result config (r/r :error msg))))))))
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
   (print-with-config #(execute-sql % "select * from artist limit 5"))
+  (print-with-config #(execute-sql % "bad-query"))
   (print-with-config get-database-info)
   (print-with-config get-catalogs)
   (print-with-config get-schemas)

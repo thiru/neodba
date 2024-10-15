@@ -1,5 +1,5 @@
 {:db-specs
- [{:name "default"
+ [{:name "prod"
    :active false
    :dbtype "postgres"
    :host "127.0.0.1"
@@ -8,7 +8,7 @@
    :schema "public"
    :user "postgres"
    :password "postgres"}
-  {:name "alternate"
+  {:name "dev"
    :active true
    :dbtype "postgres"
    :host "localhost"
@@ -17,5 +17,7 @@
    :schema "public"
    :user "postgres"
    :password "postgres"}]
+ :print-config-info true
+ :print-table-counts true
  ;; Can be nil/empty to not write SQL output to a file
  :write-to-file "sql-output.md"}

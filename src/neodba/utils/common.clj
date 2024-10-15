@@ -4,6 +4,7 @@
   (:require
     [clojure.java.io :as io]
     [clojure.pprint :as pp]
+    [clojure.repl :as repl]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.results :as r]
@@ -146,9 +147,9 @@
 
 (defn as-markdown-table
   "Convert the given vector of maps as a markdown table."
-  [maps]
   {:args (s/cat :maps (s/coll-of map?))
    :ret string?}
+  [maps]
   (if (empty? maps)
     ""
     (-> (with-out-str (pp/print-table maps))
@@ -157,3 +158,12 @@
         (str/split-lines)
         (update 1 #(str/replace % #"\+" "|"))
         (->> (str/join "\n")))))
+
+
+(defn pretty-demunge
+  "Pretty-print function vars."
+  {:ret string?}
+  [fn-object]
+  (let [dem-fn (repl/demunge (str fn-object))
+        pretty (second (re-find #"(.*?\/.*?)[\-\-|@].*" dem-fn))]
+    (if pretty pretty dem-fn)))
