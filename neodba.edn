@@ -16,4 +16,6 @@
    :dbname "postgres"
    :schema "public"
    :user "postgres"
-   :password "postgres"}]}
+   :password "postgres"}]
+ ;; Can be nil/empty to not write SQL output to a file
+ :write-to-file "sql-output.md"}

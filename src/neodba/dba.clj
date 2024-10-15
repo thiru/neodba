@@ -154,22 +154,38 @@
                                          (mapv #(str (:name %) " " (:type %)))
                                          (str/join ", "))}))))))
 
-(defn print-rs
+(defn result-set->markdown-output
   [query-res]
-  (let [rows (mapv #(update-keys % name) query-res)]
-    (if (empty? rows)
-      (println "*NO RESULTS*")
-      (println (u/as-markdown-table rows))))
-  (r/r :success ""))
+  (if (empty? query-res)
+    (r/r :warn "*NO RESULTS*")
+    (->> (mapv #(update-keys % name) query-res)
+         (u/as-markdown-table)
+         (r/r :success))))
+
+(defn print-result
+  [config result]
+  (when (not (str/blank? (:write-to-file config)))
+    (spit (:write-to-file config) (:message result)))
+  (r/print-msg result)
+  result)
 
 (defn print-with-config
   [sql-exec]
-  (let [res (r/while-success-> (read-config-file)
-                               (get-active-db-spec)
-                               (sql-exec)
-                               (print-rs))]
-    (when (r/failed? res)
-      (r/print-msg res))))
+  (let [config (read-config-file)]
+    (try
+      (let [res (r/while-success->> config
+                                    (get-active-db-spec)
+                                    (sql-exec)
+                                    (result-set->markdown-output)
+                                    (print-result config))]
+        (when (r/failed? res)
+          (print-result config res)))
+      (catch Exception ex
+        (binding [*out* *err*]
+          (let [msg (format "The following exception occurred when running `%s`\n%s"
+                            sql-exec
+                            (.toString ex))]
+            (print-result config (r/r :error msg))))))))
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
