@@ -5,6 +5,7 @@
     [clojure.string :as str]
     [next.jdbc :as jdbc]
     [next.jdbc.result-set :as jdbc-rs]
+    [neodba.postgresql :as pg]
     [neodba.utils.common :as u]
     [neodba.utils.results :as r]))
 
@@ -133,6 +134,17 @@
                                          (mapv #(str (:name %) " " (:type %)))
                                          (str/join ", "))}))))))
 
+(defn get-function-defn
+  [db-spec func-name]
+  (let [sql (condp = (:dbtype db-spec)
+              "postgres"
+              (pg/get-function-defn func-name (:schema db-spec))
+              (throw (ex-info (str "Don't know how to get function definition for dbtype: " (:dbtype db-spec)) {})))]
+    (with-open [con (get-connection db-spec)]
+      (jdbc/execute! con
+                     [sql]
+                     {:builder-fn jdbc-rs/as-unqualified-maps}))))
+
 (defn get-procedure-columns
   [db-spec proc-name]
   (with-open [con (get-connection db-spec)]
@@ -156,13 +168,24 @@
 
 (defn process-query-res
   "Format query result as a markdown table and capture row count."
-  [query-res]
+  [output-fmt query-res]
   (if (empty? query-res)
     (r/r :warn "\n*NO RESULTS*" {:row-count 0, :col-count 0})
-    (-> (mapv #(update-keys % name) query-res)
-        (u/as-markdown-table)
-        (as-> $ (r/r :success $ {:row-count (-> query-res count)
-                                 :col-count (-> query-res first keys count)})))))
+    (let [row-count (-> query-res count)
+          all-keys (-> query-res first keys)
+          col-count (-> all-keys count)]
+      (cond
+        (= :sql output-fmt)
+        (let [fn-defns (map #(format "```sql\n%s\n```"
+                                     (-> (get % (first all-keys))
+                                         (str/trim)))
+                            query-res)]
+          (r/r :success (str/join "\n\n" fn-defns)))
+        :else
+        (-> (mapv #(update-keys % name) query-res)
+            (u/as-markdown-table)
+            (as-> $ (r/r :success $ {:row-count row-count
+                                     :col-count col-count})))))))
 
 (defn output-header
   [config result]
@@ -191,13 +214,14 @@
     result))
 
 (defn print-with-config
-  [sql-exec]
+  [sql-exec & {:keys [output-fmt]
+               :or {output-fmt :markdown}}]
   (let [config (read-config-file)]
     (try
       (let [res (r/while-success->> config
                                     (get-active-db-spec)
                                     (sql-exec)
-                                    (process-query-res)
+                                    (process-query-res output-fmt)
                                     (print-result config))]
         (when (r/failed? res)
           (print-result config res)))
@@ -219,6 +243,7 @@
   (print-with-config get-views)
   (print-with-config get-functions)
   (print-with-config #(get-function-columns % "add"))
+  (print-with-config #(get-function-defn % "add") :output-fmt :sql)
   (print-with-config get-procedures)
   (print-with-config #(get-procedure-columns % "insert_data"))
   (print-with-config #(get-columns % "artist"))

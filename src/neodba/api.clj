@@ -46,6 +46,14 @@
           (= "(get-procedures)" sql)
           (dba/print-with-config dba/get-procedures)
 
+          (str/starts-with? sql "(get-function-defn")
+          (let [match (re-find #"\(get-function-defn\s+['\"]?(\w+)['\"]?\)" sql)
+                func-name (second match)]
+            (if func-name
+              (dba/print-with-config #(dba/get-function-defn % func-name) :output-fmt :sql)
+              (r/print-msg
+                (r/r :error (str "Invalid function query: " sql)))))
+
           (str/starts-with? sql "(get-columns")
           (let [match (re-find #"\(get-columns(\+)?\s+['\"]?(\w+)['\"]?\)" sql)
                 verbose? (second match)
