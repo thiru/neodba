@@ -68,25 +68,33 @@
           (dba/print-with-config dba/get-tables)
 
           (= :get-views cmd)
-          (dba/print-with-config dba/get-views)
+          (let [output-fmt (-> cmd-args first keyword)]
+            (dba/print-with-config dba/get-views
+                                   :output-fmt (or output-fmt :markdown)))
 
           (= :get-view-defn cmd)
           (let [view-name (-> cmd-args first str)]
             (if view-name
-              (dba/print-with-config #(dba/get-view-defn % view-name) :output-fmt :sql)
+              (dba/print-with-config #(dba/get-view-defn % view-name)
+                                     :output-fmt :sql)
               (r/print-msg
                 (r/r :error (str "Invalid function query: " sql)))))
 
           (= :get-functions cmd)
-          (dba/print-with-config dba/get-functions)
+          (let [output-fmt (-> cmd-args first keyword)]
+            (dba/print-with-config dba/get-functions
+                                   :output-fmt (or output-fmt :markdown)))
 
           (= :get-procedures cmd)
-          (dba/print-with-config dba/get-procedures)
+          (let [output-fmt (-> cmd-args first keyword)]
+            (dba/print-with-config dba/get-procedures
+                                   :output-fmt (or output-fmt :markdown)))
 
           (= :get-function-defn cmd)
           (let [func-name (-> cmd-args first str)]
             (if func-name
-              (dba/print-with-config #(dba/get-function-defn % func-name) :output-fmt :sql)
+              (dba/print-with-config #(dba/get-function-defn % func-name)
+                                     :output-fmt :sql)
               (r/print-msg
                 (r/r :error (str "Invalid function query: " sql)))))
 

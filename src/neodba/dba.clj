@@ -187,11 +187,18 @@
           col-count (-> all-keys count)]
       (cond
         (= :sql output-fmt)
-        (let [fn-defns (map #(format "```sql\n%s\n```"
-                                     (-> (get % (first all-keys))
-                                         (str/trim)))
-                            query-res)]
-          (r/r :success (str/join "\n\n" fn-defns)))
+        (let [rows (map #(format "```sql\n%s\n```"
+                                 (-> (get % (first all-keys))
+                                     (str/trim)))
+                        query-res)]
+          (r/r :success (str/join "\n\n" rows)))
+
+        (= :plain output-fmt)
+        (r/r :success
+             (->> query-res
+                  (map #(get % (first all-keys)))
+                  (str/join "\n")))
+
         :else
         (-> (mapv #(update-keys % name) query-res)
             (u/as-markdown-table)
