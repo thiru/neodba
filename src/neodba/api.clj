@@ -70,6 +70,13 @@
           (= :get-views cmd)
           (dba/print-with-config dba/get-views)
 
+          (= :get-view-defn cmd)
+          (let [view-name (-> cmd-args first str)]
+            (if view-name
+              (dba/print-with-config #(dba/get-view-defn % view-name) :output-fmt :sql)
+              (r/print-msg
+                (r/r :error (str "Invalid function query: " sql)))))
+
           (= :get-functions cmd)
           (dba/print-with-config dba/get-functions)
 

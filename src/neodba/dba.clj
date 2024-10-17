@@ -99,6 +99,17 @@
         (jdbc-rs/datafiable-result-set con {:builder-fn jdbc-rs/as-unqualified-lower-maps})
         (->> (map (fn [x] {:name (:table_name x)}))))))
 
+(defn get-view-defn
+  [db-spec view-name]
+  (let [sql (condp = (:dbtype db-spec)
+              "postgres"
+              (pg/get-view-defn view-name)
+              (throw (ex-info (str "Don't know how to get view definition for dbtype: " (:dbtype db-spec)) {})))]
+    (with-open [con (get-connection db-spec)]
+      (jdbc/execute! con
+                     [sql]
+                     {:builder-fn jdbc-rs/as-unqualified-maps}))))
+
 (defn get-columns
   [db-spec table-name & {:keys [verbose?]}]
   (with-open [con (get-connection db-spec)]
