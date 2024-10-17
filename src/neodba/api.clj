@@ -1,10 +1,13 @@
 (ns neodba.api
   "Primary user API."
   (:require
+    [clojure.edn :as edn]
     [clojure.string :as str]
+    [clojure.spec.alpha :as s]
     [neodba.utils.common :as u]
     [neodba.utils.log :as log :refer [log]]
     [neodba.utils.results :as r]
+    [neodba.utils.specin :refer [defn]]
     [neodba.dba :as dba]))
 
 
@@ -14,57 +17,82 @@
 (def prompt "$ ")
 
 
+(defn parse-user-input
+  {:args (s/cat :input (s/nilable string?))
+   :ret ::r/result}
+  [input]
+  (let [input (str/trim (or input ""))]
+    (cond
+      (str/blank? input)
+      (r/r :error "No SQL or command provided")
+
+      (str/starts-with? input "(")
+      (try
+        (let [cmd (edn/read-string (str/lower-case input))]
+          (if (not (list? cmd))
+            (r/r :error (str "Invalid command: " input))
+            (r/r :success "Custom command specified"
+                 {:cmd (keyword (first cmd))
+                  :cmd-args (rest cmd)})))
+        (catch Exception _
+          (r/r :error (str "Invalid command: " input))))
+
+      :else
+      (r/r :success "SQL provided" {:sql input}))))
+
 (defn execute-sql
   [input]
-  (let [sql (if (sequential? input)
-              (str/join " " input)
-              input)]
-    (if (str/blank? sql)
-      (r/r :warn "No SQL provided")
-      (let [sql (str/trim sql)]
+  (let [input (if (sequential? input)
+                (str/join " " input)
+                input)
+        parsed-input-r (parse-user-input input)]
+    (if (r/failed? parsed-input-r)
+      parsed-input-r
+      (let [{:keys [sql cmd cmd-args]} parsed-input-r]
         (when @u/tty?
-          (log (r/r :info (u/elide (str "Executing SQL: " sql) 100))))
+          (log (r/r :info (u/elide (str "Executing: " input) 100))))
         (cond
-          (= "(get-database-info)" sql)
+          sql
+          (dba/print-with-config #(dba/execute-sql % sql))
+
+          (= :get-database-info cmd)
           (dba/print-with-config dba/get-database-info)
 
-          (= "(get-catalogs)" sql)
+          (= :get-catalogs cmd)
           (dba/print-with-config dba/get-catalogs)
 
-          (= "(get-schemas)" sql)
+          (= :get-schemas cmd)
           (dba/print-with-config dba/get-schemas)
 
-          (= "(get-tables)" sql)
+          (= :get-tables cmd)
           (dba/print-with-config dba/get-tables)
 
-          (= "(get-views)" sql)
+          (= :get-views cmd)
           (dba/print-with-config dba/get-views)
 
-          (= "(get-functions)" sql)
+          (= :get-functions cmd)
           (dba/print-with-config dba/get-functions)
 
-          (= "(get-procedures)" sql)
+          (= :get-procedures cmd)
           (dba/print-with-config dba/get-procedures)
 
-          (str/starts-with? sql "(get-function-defn")
-          (let [match (re-find #"\(get-function-defn\s+['\"]?(\w+)['\"]?\)" sql)
-                func-name (second match)]
+          (= :get-function-defn cmd)
+          (let [func-name (-> cmd-args first str)]
             (if func-name
               (dba/print-with-config #(dba/get-function-defn % func-name) :output-fmt :sql)
               (r/print-msg
                 (r/r :error (str "Invalid function query: " sql)))))
 
-          (str/starts-with? sql "(get-columns")
-          (let [match (re-find #"\(get-columns(\+)?\s+['\"]?(\w+)['\"]?\)" sql)
-                verbose? (second match)
-                table-name (nth match 2 nil)]
+          (= :get-columns cmd)
+          (let [table-name (-> cmd-args first str)
+                verbose? (-> cmd-args second boolean)]
             (if table-name
               (dba/print-with-config #(dba/get-columns % table-name :verbose? verbose?))
               (r/print-msg
                 (r/r :error (str "Invalid metadata query: " sql)))))
 
           :else
-          (dba/print-with-config #(dba/execute-sql % sql)))))))
+          (r/r :error (str "Unknown command: " input)))))))
 
 (defn execute-file
   [path]

@@ -3,6 +3,7 @@
   {:clj-kondo/config '{:linters {:unused-namespace {:level :off}
                                  :unused-referred-var {:level :off}}}}
   (:require
+    [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.reflect :as reflect]
     [clojure.repl :refer [doc]]
