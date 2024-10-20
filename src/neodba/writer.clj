@@ -27,8 +27,10 @@
       "\n")))
 
 (defn print-r
-  [config result]
-  (let [result (r/prepend-msg result (output-header config result))]
+  [result user-input config]
+  (let [result (-> result
+                   (r/prepend-msg (output-header config result))
+                   (r/append-msg (str "\n\n" user-input)))]
     (when (not (str/blank? (:write-to-file config)))
       (spit (:write-to-file config) (:message result)))
     (r/print-msg result)
@@ -36,7 +38,7 @@
 
 (defn format-query-res
   "Format query result as a markdown table and capture row count."
-  [output-fmt query-res]
+  [query-res output-fmt]
   (if (empty? query-res)
     (r/r :warn "\n*NO RESULTS*" {:row-count 0, :col-count 0})
     (let [row-count (-> query-res count)
@@ -63,17 +65,17 @@
                                      :col-count col-count})))))))
 
 (defn print-sql-res
-  [sql-res config & {:keys [output-fmt]
-                     :or {output-fmt :markdown}}]
+  [sql-res user-input config & {:keys [output-fmt]
+                                :or {output-fmt :markdown}}]
   (try
-    (let [res (r/while-success->> (format-query-res output-fmt sql-res)
-                                  (print-r config))]
+    (let [res (r/while-success-> (format-query-res sql-res output-fmt)
+                                 (print-r user-input config))]
       (when (r/failed? res)
-        (print-r config res)))
+        (print-r res user-input config)))
     (catch Exception ex
       (binding [*out* *err*]
         (let [msg (format "An error occurred while running `%s`\n\n%s"
                           (u/pretty-demunge :TODO #_sql-exec)
                           (.toString ex))]
-          (print-r config (r/r :error msg)))))))
+          (print-r (r/r :error msg) user-input config))))))
 

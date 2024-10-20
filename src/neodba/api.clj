@@ -55,52 +55,52 @@
         (cond
           sql
           (-> (dba/execute-sql db-spec sql)
-              (writer/print-sql-res config))
+              (writer/print-sql-res input config))
 
           (= :get-database-info cmd)
           (-> (dba/get-database-info db-spec)
-              (writer/print-sql-res config))
+              (writer/print-sql-res input config))
 
           (= :get-catalogs cmd)
           (-> (dba/get-catalogs db-spec)
-              (writer/print-sql-res config))
+              (writer/print-sql-res input config))
 
           (= :get-schemas cmd)
           (-> (dba/get-schemas db-spec)
-              (writer/print-sql-res config))
+              (writer/print-sql-res input config))
 
           (= :get-tables cmd)
           (-> (dba/get-tables db-spec)
-              (writer/print-sql-res config))
+              (writer/print-sql-res input config))
 
           (= :get-views cmd)
           (let [output-fmt (-> cmd-args first keyword)]
             (-> (dba/get-views db-spec)
-                (writer/print-sql-res config :output-fmt (or output-fmt :markdown))))
+                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
           (= :get-view-defn cmd)
           (let [view-name (-> cmd-args first str)]
             (if view-name
               (-> (dba/get-view-defn db-spec view-name)
-                  (writer/print-sql-res config :output-fmt :sql))
+                  (writer/print-sql-res input config :output-fmt :sql))
               (r/print-msg
                 (r/r :error (str "Invalid view query: " sql)))))
 
           (= :get-functions cmd)
           (let [output-fmt (-> cmd-args first keyword)]
             (-> (dba/get-functions db-spec)
-                (writer/print-sql-res config :output-fmt (or output-fmt :markdown))))
+                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
           (= :get-procedures cmd)
           (let [output-fmt (-> cmd-args first keyword)]
             (-> (dba/get-procedures db-spec)
-                (writer/print-sql-res config :output-fmt (or output-fmt :markdown))))
+                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
           (= :get-function-defn cmd)
           (let [func-name (-> cmd-args first str)]
             (if func-name
               (-> (dba/get-function-defn db-spec func-name)
-                  (writer/print-sql-res config :output-fmt :sql))
+                  (writer/print-sql-res input config :output-fmt :sql))
               (r/print-msg
                 (r/r :error (str "Invalid function query: " sql)))))
 
@@ -109,7 +109,7 @@
                 verbose? (-> cmd-args second boolean)]
             (if table-name
               (-> (dba/get-columns db-spec table-name :verbose? verbose?)
-                  (writer/print-sql-res config :output-fmt :sql))
+                  (writer/print-sql-res input config :output-fmt :sql))
               (r/print-msg
                 (r/r :error (str "Invalid metadata query: " sql)))))
 
@@ -152,7 +152,7 @@
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
   (def config (cfg/read-config-file))
   (def db-spec (cfg/get-active-db-spec config))
-  (-> (dba/execute-sql db-spec "select * from artist limit 5") (writer/print-sql-res config))
+  (-> (dba/execute-sql db-spec "select * from artist limit 5") (writer/print-sql-res "select" config))
   (-> (dba/execute-sql db-spec "bad-query"))
   (-> (dba/get-database-info db-spec))
   (-> (dba/get-catalogs db-spec))
@@ -161,7 +161,7 @@
   (-> (dba/get-views db-spec))
   (-> (dba/get-functions db-spec))
   (-> (dba/get-function-columns db-spec "add"))
-  (-> (dba/get-function-defn db-spec "add") (writer/print-sql-res config :output-fmt :sql))
+  (-> (dba/get-function-defn db-spec "add") (writer/print-sql-res "add" config :output-fmt :sql))
   (-> (dba/get-procedures db-spec))
   (-> (dba/get-procedure-columns db-spec "insert_data"))
   (-> (dba/get-columns db-spec "artist"))
