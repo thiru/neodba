@@ -8,14 +8,13 @@
     [neodba.utils.log :as log :refer [log]]
     [neodba.utils.results :as r]
     [neodba.utils.specin :refer [defn]]
-    [neodba.dba :as dba]))
-
+    [neodba.config :as cfg]
+    [neodba.dba :as dba]
+    [neodba.writer :as writer]))
 
 (set! *warn-on-reflection* true) ; for graalvm
 
-
 (def prompt "$ ")
-
 
 (defn parse-user-input
   {:args (s/cat :input (s/nilable string?))
@@ -45,7 +44,9 @@
   (let [input (if (sequential? input)
                 (str/join " " input)
                 input)
-        parsed-input-r (parse-user-input input)]
+        parsed-input-r (parse-user-input input)
+        config (cfg/read-config-file)
+        db-spec (cfg/get-active-db-spec config)]
     (if (r/failed? parsed-input-r)
       parsed-input-r
       (let [{:keys [sql cmd cmd-args]} parsed-input-r]
@@ -53,48 +54,53 @@
           (log (r/r :info (u/elide (str "Executing: " input) 100))))
         (cond
           sql
-          (dba/print-with-config #(dba/execute-sql % sql))
+          (-> (dba/execute-sql db-spec sql)
+              (writer/print-sql-res config))
 
           (= :get-database-info cmd)
-          (dba/print-with-config dba/get-database-info)
+          (-> (dba/get-database-info db-spec)
+              (writer/print-sql-res config))
 
           (= :get-catalogs cmd)
-          (dba/print-with-config dba/get-catalogs)
+          (-> (dba/get-catalogs db-spec)
+              (writer/print-sql-res config))
 
           (= :get-schemas cmd)
-          (dba/print-with-config dba/get-schemas)
+          (-> (dba/get-schemas db-spec)
+              (writer/print-sql-res config))
 
           (= :get-tables cmd)
-          (dba/print-with-config dba/get-tables)
+          (-> (dba/get-tables db-spec)
+              (writer/print-sql-res config))
 
           (= :get-views cmd)
           (let [output-fmt (-> cmd-args first keyword)]
-            (dba/print-with-config dba/get-views
-                                   :output-fmt (or output-fmt :markdown)))
+            (-> (dba/get-views db-spec)
+                (writer/print-sql-res config :output-fmt (or output-fmt :markdown))))
 
           (= :get-view-defn cmd)
           (let [view-name (-> cmd-args first str)]
             (if view-name
-              (dba/print-with-config #(dba/get-view-defn % view-name)
-                                     :output-fmt :sql)
+              (-> (dba/get-view-defn db-spec view-name)
+                  (writer/print-sql-res config :output-fmt :sql))
               (r/print-msg
-                (r/r :error (str "Invalid function query: " sql)))))
+                (r/r :error (str "Invalid view query: " sql)))))
 
           (= :get-functions cmd)
           (let [output-fmt (-> cmd-args first keyword)]
-            (dba/print-with-config dba/get-functions
-                                   :output-fmt (or output-fmt :markdown)))
+            (-> (dba/get-functions db-spec)
+                (writer/print-sql-res config :output-fmt (or output-fmt :markdown))))
 
           (= :get-procedures cmd)
           (let [output-fmt (-> cmd-args first keyword)]
-            (dba/print-with-config dba/get-procedures
-                                   :output-fmt (or output-fmt :markdown)))
+            (-> (dba/get-procedures db-spec)
+                (writer/print-sql-res config :output-fmt (or output-fmt :markdown))))
 
           (= :get-function-defn cmd)
           (let [func-name (-> cmd-args first str)]
             (if func-name
-              (dba/print-with-config #(dba/get-function-defn % func-name)
-                                     :output-fmt :sql)
+              (-> (dba/get-function-defn db-spec func-name)
+                  (writer/print-sql-res config :output-fmt :sql))
               (r/print-msg
                 (r/r :error (str "Invalid function query: " sql)))))
 
@@ -102,7 +108,8 @@
           (let [table-name (-> cmd-args first str)
                 verbose? (-> cmd-args second boolean)]
             (if table-name
-              (dba/print-with-config #(dba/get-columns % table-name :verbose? verbose?))
+              (-> (dba/get-columns db-spec table-name :verbose? verbose?)
+                  (writer/print-sql-res config :output-fmt :sql))
               (r/print-msg
                 (r/r :error (str "Invalid metadata query: " sql)))))
 
@@ -141,6 +148,21 @@
           (recur)))))
   (r/r :success ""))
 
-
 (comment
-  (execute-sql "select * from artist limit 3"))
+  ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
+  (def config (cfg/read-config-file))
+  (def db-spec (cfg/get-active-db-spec config))
+  (-> (dba/execute-sql db-spec "select * from artist limit 5") (writer/print-sql-res config))
+  (-> (dba/execute-sql db-spec "bad-query"))
+  (-> (dba/get-database-info db-spec))
+  (-> (dba/get-catalogs db-spec))
+  (-> (dba/get-schemas db-spec))
+  (-> (dba/get-tables db-spec))
+  (-> (dba/get-views db-spec))
+  (-> (dba/get-functions db-spec))
+  (-> (dba/get-function-columns db-spec "add"))
+  (-> (dba/get-function-defn db-spec "add") (writer/print-sql-res config :output-fmt :sql))
+  (-> (dba/get-procedures db-spec))
+  (-> (dba/get-procedure-columns db-spec "insert_data"))
+  (-> (dba/get-columns db-spec "artist"))
+  (-> (dba/get-columns db-spec "artist" :verbose? true)))
