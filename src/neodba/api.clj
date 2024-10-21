@@ -70,8 +70,9 @@
               (writer/print-sql-res input config))
 
           (= :get-tables cmd)
-          (-> (dba/get-tables db-spec)
-              (writer/print-sql-res input config))
+          (let [output-fmt (-> cmd-args first keyword)]
+            (-> (dba/get-tables db-spec)
+                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
           (= :get-views cmd)
           (let [output-fmt (-> cmd-args first keyword)]
