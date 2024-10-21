@@ -52,78 +52,89 @@
       (let [{:keys [sql cmd cmd-args]} parsed-input-r]
         (when @u/tty?
           (log (r/r :info (u/elide (str "Executing: " input) 100))))
-        (cond
-          sql
-          (-> (dba/execute-sql db-spec sql)
-              (writer/print-sql-res input config))
+        (try
+          (cond
+            sql
+            (-> (dba/execute-sql db-spec sql)
+                (writer/print-sql-res input config))
 
-          (= :get-database-info cmd)
-          (-> (dba/get-database-info db-spec)
-              (writer/print-sql-res input config))
+            (= :get-database-info cmd)
+            (-> (dba/get-database-info db-spec)
+                (writer/print-sql-res input config))
 
-          (= :get-catalogs cmd)
-          (-> (dba/get-catalogs db-spec)
-              (writer/print-sql-res input config))
+            (= :get-catalogs cmd)
+            (-> (dba/get-catalogs db-spec)
+                (writer/print-sql-res input config))
 
-          (= :get-schemas cmd)
-          (-> (dba/get-schemas db-spec)
-              (writer/print-sql-res input config))
+            (= :get-schemas cmd)
+            (-> (dba/get-schemas db-spec)
+                (writer/print-sql-res input config))
 
-          (= :get-tables cmd)
-          (let [output-fmt (-> cmd-args first keyword)]
-            (-> (dba/get-tables db-spec)
-                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
+            (= :get-tables cmd)
+            (let [output-fmt (-> cmd-args first keyword)]
+              (-> (dba/get-tables db-spec)
+                  (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
-          (= :get-views cmd)
-          (let [output-fmt (-> cmd-args first keyword)]
-            (-> (dba/get-views db-spec)
-                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
+            (= :get-views cmd)
+            (let [output-fmt (-> cmd-args first keyword)]
+              (-> (dba/get-views db-spec)
+                  (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
-          (= :get-view-defn cmd)
-          (let [view-name (-> cmd-args first str)]
-            (if view-name
-              (-> (dba/get-view-defn db-spec view-name)
-                  (writer/print-sql-res input config :output-fmt :sql))
-              (r/print-msg
-                (r/r :error (str "Invalid view query: " sql)))))
+            (= :get-view-defn cmd)
+            (let [view-name (-> cmd-args first str)]
+              (if view-name
+                (-> (dba/get-view-defn db-spec view-name)
+                    (writer/print-sql-res input config :output-fmt :sql))
+                (writer/print-r
+                  (r/r :error (str "Invalid view query: " sql))
+                  input
+                  config)))
 
-          (= :get-functions cmd)
-          (let [output-fmt (-> cmd-args first keyword)]
-            (-> (dba/get-functions db-spec)
-                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
+            (= :get-functions cmd)
+            (let [output-fmt (-> cmd-args first keyword)]
+              (-> (dba/get-functions db-spec)
+                  (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
-          (= :get-function-defn cmd)
-          (let [func-name (-> cmd-args first str)]
-            (if func-name
-              (-> (dba/get-function-defn db-spec func-name)
-                  (writer/print-sql-res input config :output-fmt :sql))
-              (r/print-msg
-                (r/r :error (str "Invalid function query: " sql)))))
+            (= :get-function-defn cmd)
+            (let [func-name (-> cmd-args first str)]
+              (if func-name
+                (-> (dba/get-function-defn db-spec func-name)
+                    (writer/print-sql-res input config :output-fmt :sql))
+                (writer/print-r
+                  (r/r :error (str "Invalid function query: " sql))
+                  input
+                  config)))
 
-          (= :get-procedures cmd)
-          (let [output-fmt (-> cmd-args first keyword)]
-            (-> (dba/get-procedures db-spec)
-                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
+            (= :get-procedures cmd)
+            (let [output-fmt (-> cmd-args first keyword)]
+              (-> (dba/get-procedures db-spec)
+                  (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
-          (= :get-procedure-defn cmd)
-          (let [proc-name (-> cmd-args first str)]
-            (if proc-name
-              (-> (dba/get-procedure-defn db-spec proc-name)
-                  (writer/print-sql-res input config :output-fmt :sql))
-              (r/print-msg
-                (r/r :error (str "Invalid procedure query: " sql)))))
+            (= :get-procedure-defn cmd)
+            (let [proc-name (-> cmd-args first str)]
+              (if proc-name
+                (-> (dba/get-procedure-defn db-spec proc-name)
+                    (writer/print-sql-res input config :output-fmt :sql))
+                (writer/print-r
+                  (r/r :error (str "Invalid procedure query: " sql))
+                  input
+                  config)))
 
-          (= :get-columns cmd)
-          (let [table-name (-> cmd-args first str)
-                verbose? (-> cmd-args second boolean)]
-            (if table-name
-              (-> (dba/get-columns db-spec table-name :verbose? verbose?)
-                  (writer/print-sql-res input config :output-fmt :sql))
-              (r/print-msg
-                (r/r :error (str "Invalid metadata query: " sql)))))
+            (= :get-columns cmd)
+            (let [table-name (-> cmd-args first str)
+                  verbose? (-> cmd-args second boolean)]
+              (if table-name
+                (-> (dba/get-columns db-spec table-name :verbose? verbose?)
+                    (writer/print-sql-res input config :output-fmt :sql))
+                (writer/print-r
+                  (r/r :error (str "Invalid metadata query: " sql))
+                  input
+                  config)))
 
-          :else
-          (r/r :error (str "Unknown command: " input)))))))
+            :else
+            (writer/print-r (r/r :error (str "Unknown command: " input)) input config))
+          (catch Exception ex
+            (writer/print-r (r/r :error (.toString ex)) input config)))))))
 
 (defn execute-file
   [path]
