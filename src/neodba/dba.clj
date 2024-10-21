@@ -147,3 +147,14 @@
                                          (mapv #(str (:name %) " " (:type %)))
                                          (str/join ", "))}))))))
 
+(defn get-procedure-defn
+  [db-spec proc-name]
+  (let [sql (condp = (:dbtype db-spec)
+              "postgres"
+              (pg/get-procedure-defn proc-name (:schema db-spec))
+              (throw (ex-info (str "Don't know how to get procedure definition for dbtype: " (:dbtype db-spec)) {})))]
+    (with-open [con (get-connection db-spec)]
+      (jdbc/execute! con
+                     [sql]
+                     {:builder-fn jdbc-rs/as-unqualified-maps}))))
+

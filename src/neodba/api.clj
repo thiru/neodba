@@ -92,11 +92,6 @@
             (-> (dba/get-functions db-spec)
                 (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
 
-          (= :get-procedures cmd)
-          (let [output-fmt (-> cmd-args first keyword)]
-            (-> (dba/get-procedures db-spec)
-                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
-
           (= :get-function-defn cmd)
           (let [func-name (-> cmd-args first str)]
             (if func-name
@@ -104,6 +99,19 @@
                   (writer/print-sql-res input config :output-fmt :sql))
               (r/print-msg
                 (r/r :error (str "Invalid function query: " sql)))))
+
+          (= :get-procedures cmd)
+          (let [output-fmt (-> cmd-args first keyword)]
+            (-> (dba/get-procedures db-spec)
+                (writer/print-sql-res input config :output-fmt (or output-fmt :markdown))))
+
+          (= :get-procedure-defn cmd)
+          (let [proc-name (-> cmd-args first str)]
+            (if proc-name
+              (-> (dba/get-procedure-defn db-spec proc-name)
+                  (writer/print-sql-res input config :output-fmt :sql))
+              (r/print-msg
+                (r/r :error (str "Invalid procedure query: " sql)))))
 
           (= :get-columns cmd)
           (let [table-name (-> cmd-args first str)
