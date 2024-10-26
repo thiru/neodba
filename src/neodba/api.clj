@@ -128,7 +128,7 @@
                   verbose? (-> cmd-args second boolean)]
               (if table-name
                 (-> (dba/get-columns db-spec table-name :verbose? verbose?)
-                    (writer/print-sql-res input config :output-fmt :sql))
+                    (writer/print-sql-res input config :output-fmt :markdown))
                 (writer/print-r
                   (r/r :error (str "Table name missing in command: " sql))
                   input
