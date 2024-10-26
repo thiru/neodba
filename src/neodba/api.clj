@@ -86,7 +86,7 @@
                 (-> (dba/get-view-defn db-spec view-name)
                     (writer/print-sql-res input config :output-fmt :sql))
                 (writer/print-r
-                  (r/r :error (str "Invalid view query: " sql))
+                  (r/r :error (str "View name missing in command: " sql))
                   input
                   config)))
 
@@ -101,7 +101,7 @@
                 (-> (dba/get-function-defn db-spec func-name)
                     (writer/print-sql-res input config :output-fmt :sql))
                 (writer/print-r
-                  (r/r :error (str "Invalid function query: " sql))
+                  (r/r :error (str "Function name missing in command: " sql))
                   input
                   config)))
 
@@ -116,7 +116,7 @@
                 (-> (dba/get-procedure-defn db-spec proc-name)
                     (writer/print-sql-res input config :output-fmt :sql))
                 (writer/print-r
-                  (r/r :error (str "Invalid procedure query: " sql))
+                  (r/r :error (str "Stored procedure name missing in command: " sql))
                   input
                   config)))
 
@@ -127,7 +127,7 @@
                 (-> (dba/get-columns db-spec table-name :verbose? verbose?)
                     (writer/print-sql-res input config :output-fmt :sql))
                 (writer/print-r
-                  (r/r :error (str "Invalid metadata query: " sql))
+                  (r/r :error (str "Table name missing in command: " sql))
                   input
                   config)))
 
