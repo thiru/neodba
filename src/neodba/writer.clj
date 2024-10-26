@@ -76,7 +76,7 @@
     (catch Exception ex
       (binding [*out* *err*]
         (let [msg (format "An error occurred while running `%s`\n\n%s"
-                          (u/pretty-demunge :TODO #_sql-exec)
+                          user-input
                           (.toString ex))]
           (print-r (r/r :error msg) user-input config output-fmt))))))
 
