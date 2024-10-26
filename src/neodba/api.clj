@@ -88,7 +88,8 @@
                 (writer/print-r
                   (r/r :error (str "View name missing in command: " sql))
                   input
-                  config)))
+                  config
+                  :markdown)))
 
             (= :get-functions cmd)
             (let [output-fmt (-> cmd-args first keyword)]
@@ -103,7 +104,8 @@
                 (writer/print-r
                   (r/r :error (str "Function name missing in command: " sql))
                   input
-                  config)))
+                  config
+                  :markdown)))
 
             (= :get-procedures cmd)
             (let [output-fmt (-> cmd-args first keyword)]
@@ -118,7 +120,8 @@
                 (writer/print-r
                   (r/r :error (str "Stored procedure name missing in command: " sql))
                   input
-                  config)))
+                  config
+                  :markdown)))
 
             (= :get-columns cmd)
             (let [table-name (-> cmd-args first str)
@@ -129,12 +132,13 @@
                 (writer/print-r
                   (r/r :error (str "Table name missing in command: " sql))
                   input
-                  config)))
+                  config
+                  :markdown)))
 
             :else
-            (writer/print-r (r/r :error (str "Unknown command: " input)) input config))
+            (writer/print-r (r/r :error (str "Unknown command: " input)) input config :markdown))
           (catch Exception ex
-            (writer/print-r (r/r :error (.toString ex)) input config)))))))
+            (writer/print-r (r/r :error (.toString ex)) input config :markdown)))))))
 
 (defn execute-file
   [path]

@@ -27,10 +27,11 @@
       "\n")))
 
 (defn print-r
-  [result user-input config]
-  (let [result (-> result
-                   (r/prepend-msg (output-header config result))
-                   (r/append-msg (str "\n\n" user-input)))]
+  [result user-input config output-fmt]
+  (let [result (if (= :plain output-fmt)
+                 result
+                 (r/prepend-msg result (output-header config result)))
+        result (r/append-msg result (str "\n\n" user-input))]
     (when (not (str/blank? (:write-to-file config)))
       (spit (:write-to-file config) (:message result)))
     (r/print-msg result)
@@ -69,13 +70,13 @@
                                 :or {output-fmt :markdown}}]
   (try
     (let [res (r/while-success-> (format-query-res sql-res output-fmt)
-                                 (print-r user-input config))]
+                                 (print-r user-input config output-fmt))]
       (when (r/failed? res)
-        (print-r res user-input config)))
+        (print-r res user-input config output-fmt)))
     (catch Exception ex
       (binding [*out* *err*]
         (let [msg (format "An error occurred while running `%s`\n\n%s"
                           (u/pretty-demunge :TODO #_sql-exec)
                           (.toString ex))]
-          (print-r (r/r :error msg) user-input config))))))
+          (print-r (r/r :error msg) user-input config output-fmt))))))
 
