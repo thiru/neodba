@@ -16,7 +16,7 @@
         (str
           (when (:print-config-info config)
             (format " **%s**: *%s* / *%s* / *%s* "
-                    (:name active-db-spec)
+                    (-> active-db-spec :name name str/upper-case)
                     (:host active-db-spec)
                     (:dbname active-db-spec)
                     (:schema active-db-spec)))

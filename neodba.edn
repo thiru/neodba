@@ -1,22 +1,15 @@
-{:db-specs
- [{:name "prod"
-   :active false
-   :dbtype "postgres"
-   :host "127.0.0.1"
-   :port 5432
-   :dbname "postgres"
-   :schema "public"
-   :user "postgres"
-   :password "postgres"}
-  {:name "dev"
-   :active true
-   :dbtype "postgres"
-   :host "localhost"
-   :port 5432
-   :dbname "postgres"
-   :schema "public"
-   :user "postgres"
-   :password "postgres"}]
+{:active-connection :dev
+ :connections
+ {:dev  {:dbtype "postgres"
+         :host "localhost"
+         :port 5432
+         :dbname "postgres"
+         :schema "public"
+         :user "postgres"
+         :password "postgres"}
+  :prod {:merge-with :dev
+         :host "127.0.0.1"
+         :password "postgres"}}
  :print-config-info true
  :print-table-counts true
  ;; Can be nil/empty to not write SQL output to a file

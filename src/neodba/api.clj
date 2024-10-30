@@ -45,7 +45,7 @@
                 (str/join " " input)
                 input)
         parsed-input-r (parse-user-input input)
-        config (cfg/read-config-file)
+        config (-> (cfg/load-config-file) (cfg/process-config))
         db-spec (cfg/get-active-db-spec config)]
     (if (r/failed? parsed-input-r)
       parsed-input-r
@@ -174,7 +174,7 @@
 
 (comment
   ;; Sample databases taken from here: https://github.com/lerocha/chinook-database
-  (def config (cfg/read-config-file))
+  (def config (cfg/load-config-file))
   (def db-spec (cfg/get-active-db-spec config))
   (-> (dba/execute-sql db-spec "select * from artist limit 5") (writer/print-sql-res "select" config))
   (-> (dba/execute-sql db-spec "bad-query"))

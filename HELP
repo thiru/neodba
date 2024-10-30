@@ -9,18 +9,26 @@ CONFIG:
 Create a config file named neodba.edn to specify all your database connections.
 This file must be in the current working directory when running neodba.
 The first `:db-spec` with `:active` being truthy will be used.
-The following is a Postgresql example. For complete documentation see:
+For detailed documentation about the connection maps see:
 https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource
+The following is a Postgresql example.
 
-  {:db-specs
-   [{:name "default"
-     :active true
-     :dbtype "postgres"
-     :host "localhost"
-     :port 5432
-     :dbname "postgres"
-     :user "postgres"
-     :password "postgres"}]}
+  {:active-connection :prod
+   :connections
+   {:dev  {:dbtype "postgres"
+           :host "localhost"
+           :port 5432
+           :dbname "postgres"
+           :schema "public"
+           :user "postgres"
+           :password "postgres"}
+    :prod {:merge-with :dev
+           :host "127.0.0.1"
+           :password "postgres"}}
+   :print-config-info true
+   :print-table-counts true
+   ;; Can be nil/empty to not write SQL output to a file
+   :write-to-file "sql-output.md"}
 
 OPTIONS:
 
