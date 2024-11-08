@@ -13,7 +13,7 @@
     [neodba.config :as cfg]
     [neodba.dba :as dba]
     [neodba.utils.common :as u]
-    [neodba.utils.log :as log]
+    [neodba.utils.logging :refer [log] :as logging]
     [neodba.utils.results :as r]
     [puget.printer :as puget]
     [rebel-readline.main :as rebel]

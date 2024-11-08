@@ -5,7 +5,7 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [neodba.utils.common :as u]
-    [neodba.utils.log :as log :refer [log]]
+    [neodba.utils.logging :refer [log] :as logging]
     [neodba.utils.results :as r]
     [neodba.utils.specin :refer [defn]]
     [neodba.config :as cfg]

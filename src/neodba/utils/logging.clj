@@ -1,4 +1,4 @@
-(ns neodba.utils.log
+(ns neodba.utils.logging
   "Simple/naive logging."
   (:refer-clojure :exclude [defn])
   (:require
@@ -21,10 +21,15 @@
   log-level-num
   (atom (get r/levels :info)))
 
+(defonce ^{:doc "Specifies where to output to. Should be `:console` or a (coercable) file."}
+  output-to
+  (atom :console))
+
 (def formatted-levels
   "Pre-calculate the appearance of levels to save during runtime."
   (delay
-    (if @u/tty?
+    (if (and (= :console @output-to)
+             @u/tty?)
       {:fatal   (colourise :fatal   "FATAL: ")
        :error   (colourise :error   "ERROR: ")
        :warn    (colourise :warn    "WARN: ")
@@ -139,10 +144,14 @@
                      (:message r-to-log)
                      (when pp-r-map?
                        (str "\n" (puget/cprint-str (dissoc r-to-log :level :message)))))]
-        (if (r/warned? r-to-log)
-          (binding [*out* *err*]
+        (if (= :console @output-to)
+          (if (r/warned? r-to-log)
+            (binding [*out* *err*]
+              (println msg))
             (println msg))
-          (println msg)))))
+          (spit @output-to
+                (str msg "\n")
+                :append true)))))
   result)
 
 (defn print-all-levels
