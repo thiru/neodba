@@ -1,14 +1,13 @@
 (ns neodba.cli
   "Command-line interface abstraction."
-  (:refer-clojure :exclude [defn])
   (:require
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.common :as u]
     [neodba.utils.logging :refer [log] :as logging]
     [neodba.utils.results :as r]
-    [neodba.utils.specin :refer [defn]]
-    [neodba.api :as api]))
+    [neodba.api :as api]
+    [specin.core :refer [apply-specs s< s>]]))
 
 
 (set! *warn-on-reflection* true) ; for graalvm
@@ -41,8 +40,8 @@
 
 
 (defn check-args
-  {:args (s/cat :cli-args ::cli-args)
-   :ret ::cli-r}
+  {:args (s< :cli-args ::cli-args)
+   :ret (s> ::cli-r)}
   [cli-args]
   (if (empty? cli-args)
     (r/r :success "No arguments provided. Will enter stdin mode."
@@ -77,8 +76,8 @@
             :global-kvp-opts kvp-opts}))))
 
 (defn extract-sub-cmd-and-args
-  {:args (s/cat :_cli-r ::cli-r)
-   :ret ::cli-r}
+  {:args (s< :_cli-r ::cli-r)
+   :ret (s> ::cli-r)}
   [{:keys [global-flag-opts cli-args] :as cli-r}]
   (if-let [sub-cmd (u/find-first global-cmd-opts global-flag-opts)]
     (assoc cli-r
@@ -95,8 +94,8 @@
 
 (defn parse-cli-args
   "Parse the given CLI arguments."
-  {:args (s/cat :cli-args ::cli-args)
-   :ret ::cli-r}
+  {:args (s< :cli-args ::cli-args)
+   :ret (s> ::cli-r)}
   [cli-args]
   (r/while-success-> (check-args cli-args)
                      extract-global-opts
@@ -118,8 +117,8 @@
       cli-r)))
 
 (defn run-sub-cmd
-  {:args (s/cat :cli-r ::cli-r)
-   :ret ::cli-r}
+  {:args (s< :cli-r ::cli-r)
+   :ret (s> ::cli-r)}
   [{:keys [sub-cmd] :as cli-r}]
   (case sub-cmd
     ("-h" "--help")
@@ -149,8 +148,8 @@
 
 (defn run
   "Execute the command specified by the given arguments."
-  {:args (s/cat :cli-args ::cli-args)
-   :ret ::cli-r}
+  {:args (s< :cli-args ::cli-args)
+   :ret (s> ::cli-r)}
   [cli-args]
   (r/while-success-> (parse-cli-args cli-args)
                      set-log-level
@@ -162,3 +161,5 @@
   (parse-cli-args [])
   (parse-cli-args ["--version"])
   (parse-cli-args ["--log-level" "info" "exec" "select * from users"]))
+
+(apply-specs)

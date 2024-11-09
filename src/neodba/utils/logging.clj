@@ -1,14 +1,13 @@
 (ns neodba.utils.logging
   "Simple/naive logging."
-  (:refer-clojure :exclude [defn])
   (:require
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.common :as u]
     [neodba.utils.results :as r]
-    [neodba.utils.specin :refer [defn]]
     [puget.color.ansi :as ansi]
-    [puget.printer :as puget]))
+    [puget.printer :as puget]
+    [specin.core :refer [apply-specs s< s>]]))
 
 
 (set! *warn-on-reflection* true) ; for graalvm
@@ -47,7 +46,7 @@
 
 (defn get-log-level
   "Get the current logging level (keyword)."
-  {:ret ::r/level}
+  {:ret (s> ::r/level)}
   []
   (->> r/levels
        (u/find-first (fn [[_k v]]
@@ -56,8 +55,8 @@
 
 (defn set-log-level
   "Set the current logging level."
-  {:args (s/cat :level ::r/level)
-   :ret ::r/result}
+  {:args (s< :level ::r/level)
+   :ret (s> ::r/result)}
   [level]
   (let [level-num (get r/levels level)]
     (if (nil? level-num)
@@ -69,9 +68,9 @@
 ;(ansi/sgr "abc 123" :red)
 (defn colourise
   "Colourise the given `text` according to `level`."
-  {:args (s/cat :level ::r/level
-                :text string?)
-   :ret string?}
+  {:args (s< :level ::r/level
+             :text string?)
+   :ret (s> string?)}
   [level text]
   (condp = level
     :fatal
@@ -101,8 +100,8 @@
 (defn loggable?
   "Determine whether the given result should be logged.
   This is dependent on the current log level and if the message in the result is non-empty."
-  {:args (s/cat :result ::r/result)
-   :ret boolean?}
+  {:args (s< :result ::r/result)
+   :ret (s> boolean?)}
   [result]
   (and (not (empty? (or (:message result) "")))
        (<= (get r/levels (:level result) :error)
@@ -131,9 +130,9 @@
 
   The original result is returned to make certain contexts easier to work with such as injecting in
   the middle of a threading macro."
-  {:args (s/cat :result ::r/result
-                :kwargs (s/keys* :opt-un []))
-   :ret ::r/result}
+  {:args (s< :result ::r/result
+             :kwargs (s/keys* :opt-un []))
+   :ret (s> ::r/result)}
   [result & {:keys [exclude-level? force? override-level pp-r-map?]}]
   (let [r-to-log (if override-level
                    (assoc result :level override-level)
@@ -168,3 +167,5 @@
   (log (r/r :error "map print test" {:a 1 :b 2}) :pp-r-map? true)
   (print-all-levels)
   (print-all-levels :force? true))
+
+(apply-specs)

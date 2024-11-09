@@ -1,6 +1,5 @@
 (ns neodba.utils.common
   "Common/generic utilities."
-  (:refer-clojure :exclude [defn])
   (:require
     [clojure.java.io :as io]
     [clojure.pprint :as pp]
@@ -8,8 +7,8 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.results :as r]
-    [neodba.utils.specin :refer [defn]]
-    [puget.printer :as puget]))
+    [puget.printer :as puget]
+    [specin.core :refer [apply-specs s< s>]]))
 
 
 (set! *warn-on-reflection* true) ; for graalvm
@@ -35,7 +34,7 @@
 
 (defn read-stdin
   "Read text from stdin."
-  {:ret (s/nilable string?)}
+  {:ret (s> (s/nilable string?))}
   []
   ;; (r/print-msg (r/r :error "Reading from stdin...")) ; DEBUG
   (loop [input (read-line)
@@ -48,8 +47,8 @@
 (defn exit!
   "Exit app with a success/failure exit code based on the given result.
   The result's message is also printed to stdout or stderr as appropriate."
-  {:args (s/cat :result ::r/result)
-   :ret nil?}
+  {:args (s< :result ::r/result)
+   :ret (s> nil?)}
   [result]
   (when result
     (r/print-msg result)
@@ -61,9 +60,9 @@
 
 (defn elide
   "Shorten the given string if necessary and add ellipsis to the end."
-  {:args (s/cat :text (s/nilable string?)
-                :max-length nat-int?)
-   :ret (s/nilable string?)}
+  {:args (s< :text (s/nilable string?)
+             :max-length nat-int?)
+   :ret (s> (s/nilable string?))}
   [text max-length]
   (cond
     (nil? text)
@@ -82,10 +81,10 @@
 
   The first argument is the format control string. If it's a list it will be
   concatenated together. This makes it easier to format long strings."
-  {:args (s/cat :formatter (s/or :whole-string string?
-                                 :segmented-string (s/coll-of string?))
-                :args (s/* any?))
-   :ret string?}
+  {:args (s< :formatter (s/or :whole-string string?
+                              :segmented-string (s/coll-of string?))
+             :args (s/* any?))
+   :ret (s> string?)}
   [formatter & args]
   (if (sequential? formatter)
     (apply format (str/join "" formatter) args)
@@ -104,9 +103,9 @@
 
 (defn slurp-file
   "Read all contents of the given file."
-  {:args (s/cat :file-path (s/nilable string?))
-   :ret (s/or :content string?
-              :error-result :r/result)}
+  {:args (s< :file-path (s/nilable string?))
+   :ret (s> (s/or :content string?
+                  :error-result :r/result))}
   [file-path]
   (if (str/blank? file-path)
     (r/r :error "No file was provided")
@@ -121,9 +120,9 @@
   "Exception-free integer parsing.
 
    Returns the parsed integer if successful, otherwise `fallback`."
-  {:args (s/cat :input (s/nilable string?)
-                :kwargs (s/keys* :opt-un []))
-   :ret int?}
+  {:args (s< :input (s/nilable string?)
+             :kwargs (s/keys* :opt-un []))
+   :ret (s> int?)}
   [input & {:keys [fallback]
             :or {fallback 0}}]
   (try
@@ -135,9 +134,9 @@
   "Exception-free float parsing.
 
    Returns the parsed float if successful, otherwise `fallback`."
-  {:args (s/cat :input (s/nilable string?)
-                :kwargs (s/keys* :opt-un []))
-   :ret float?}
+  {:args (s< :input (s/nilable string?)
+             :kwargs (s/keys* :opt-un []))
+   :ret (s> float?)}
   [input & {:keys [fallback]
             :or {fallback 0.0}}]
   (try
@@ -147,8 +146,8 @@
 
 (defn as-markdown-table
   "Convert the given vector of maps as a markdown table."
-  {:args (s/cat :maps (s/coll-of map?))
-   :ret string?}
+  {:args (s< :maps (s/coll-of map?))
+   :ret (s> string?)}
   [maps]
   (if (empty? maps)
     ""
@@ -162,8 +161,10 @@
 
 (defn pretty-demunge
   "Pretty-print function vars."
-  {:ret string?}
+  {:ret (s> string?)}
   [fn-object]
   (let [dem-fn (repl/demunge (str fn-object))
         pretty (second (re-find #"(.*?\/.*?)[\-\-|@].*" dem-fn))]
     (if pretty pretty dem-fn)))
+
+(apply-specs)

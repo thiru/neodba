@@ -7,18 +7,18 @@
     [neodba.utils.common :as u]
     [neodba.utils.logging :refer [log] :as logging]
     [neodba.utils.results :as r]
-    [neodba.utils.specin :refer [defn]]
     [neodba.config :as cfg]
     [neodba.dba :as dba]
-    [neodba.writer :as writer]))
+    [neodba.writer :as writer]
+    [specin.core :refer [apply-specs s< s>]]))
 
 (set! *warn-on-reflection* true) ; for graalvm
 
 (def prompt "$ ")
 
 (defn parse-user-input
-  {:args (s/cat :input (s/nilable string?))
-   :ret ::r/result}
+  {:args (s< :input (s/nilable string?))
+   :ret (s> ::r/result)}
   [input]
   (let [input (str/trim (or input ""))]
     (cond
@@ -190,3 +190,5 @@
   (-> (dba/get-procedure-columns db-spec "insert_data"))
   (-> (dba/get-columns db-spec "artist"))
   (-> (dba/get-columns db-spec "artist" :verbose? true)))
+
+(apply-specs)

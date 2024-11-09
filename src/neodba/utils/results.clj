@@ -1,9 +1,8 @@
 (ns neodba.utils.results
   "Generic facilities around reporting and validation."
-  (:refer-clojure :exclude [defn])
   (:require
     [clojure.spec.alpha :as s]
-    [neodba.utils.specin :refer [defn]]))
+    [specin.core :refer [apply-specs s< s>]]))
 
 
 (set! *warn-on-reflection* true) ; for graalvm
@@ -50,10 +49,10 @@
     * A message describing the result (usually a string)
   * `extra`
     * Additional key/value pairs to merge into the result map"
-  {:args (s/cat :level ::level
-                :message (s/? ::message)
-                :extra (s/? map?))
-   :ret ::result}
+  {:args (s< :level ::level
+             :message (s/? ::message)
+             :extra (s/? map?))
+   :ret (s> ::result)}
   ([level]
    (r level ""))
   ([level message]
@@ -118,8 +117,8 @@
 (defn print-msg
   "Prints the message of the given result to stdout or stderr accordingly. No printing is done if
   the message is empty. Warnings are printed to stderr."
-  {:args (s/cat :result ::result)
-   :ret nil?}
+  {:args (s< :result ::result)
+   :ret (s> nil?)}
   [result] (when (not (empty? (or (:message result) "")))
              (if (or (failed? result)
                      (warned? result))
@@ -158,3 +157,5 @@
 
 (comment
   (prepend-msg (r :info "original") "prepended - "))
+
+(apply-specs)
