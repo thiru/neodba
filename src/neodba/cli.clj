@@ -3,6 +3,7 @@
   (:require
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
+    [neodba.lsp :as lsp]
     [neodba.utils.common :as u]
     [neodba.utils.logging :refer [log] :as logging]
     [neodba.utils.results :as r]
@@ -132,6 +133,9 @@
 
     ("f" "file")
     (api/execute-file (-> cli-r :sub-cmd-args first))
+
+    ("l" "lsp")
+    (lsp/start-read-loop)
 
     ("r" "repl")
     (api/read-sql-from-stdin)
