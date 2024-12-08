@@ -5,6 +5,7 @@
 .lsp/
 .nrepl-port
 .prepl-port
+*.log
 sql-output.md
 classes/
 out/
