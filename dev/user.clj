@@ -12,6 +12,8 @@
     [neodba.api :as api]
     [neodba.config :as cfg]
     [neodba.dba :as dba]
+    [neodba.jsonrpc :as rpc]
+    [neodba.lsp :as lsp]
     [neodba.utils.common :as u]
     [neodba.utils.logger :refer [log] :as logger]
     [neodba.utils.results :as r]
