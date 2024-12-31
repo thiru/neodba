@@ -1,5 +1,5 @@
-(ns neodba.utils.logging
-  "Simple/naive logging."
+(ns neodba.utils.logger
+  "A simple/naive logger."
   (:require
     [clojure.spec.alpha :as s]
     [clojure.string :as str]

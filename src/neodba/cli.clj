@@ -4,7 +4,7 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [neodba.utils.common :as u]
-    [neodba.utils.logging :refer [log] :as logging]
+    [neodba.utils.logger :refer [log] :as logger]
     [neodba.utils.results :as r]
     [neodba.api :as api]
     [specin.core :refer [apply-specs s< s>]]))
@@ -111,9 +111,9 @@
                            second)]
     (if log-level-str
       (merge cli-r
-             (logging/set-log-level (-> log-level-str
-                                        str/lower-case
-                                        keyword)))
+             (logger/set-log-level (-> log-level-str
+                                       str/lower-case
+                                       keyword)))
       cli-r)))
 
 (defn run-sub-cmd
