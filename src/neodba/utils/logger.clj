@@ -65,7 +65,6 @@
         (reset! log-level-num level-num)
         (r/r :success (format "Log level set to '%s' " (-> level name str/upper-case)))))))
 
-;(ansi/sgr "abc 123" :red)
 (defn colourise
   "Colourise the given `text` according to `level`."
   {:args (s< :level ::r/level
@@ -120,6 +119,8 @@
   * `force?`
     * When truthy the log is printed regardless of the current log level
     * I.e. ignoring `loggable?`
+  * `lang`
+    * Optionally specify a language to surround with markdown markers
   * `override-level`
     * Specify a level which will override the level of the given `result`
     * This is useful when you don't want to change the level of the given `result` but do want to
@@ -133,14 +134,16 @@
   {:args (s< :result ::r/result
              :kwargs (s/keys* :opt-un []))
    :ret (s> ::r/result)}
-  [result & {:keys [exclude-level? force? override-level pp-r-map?]}]
+  [result & {:keys [exclude-level? force? lang override-level pp-r-map?]}]
   (let [r-to-log (if override-level
                    (assoc result :level override-level)
                    result)]
     (when (or force? (loggable? r-to-log))
-      (let [msg (str (when (not exclude-level?)
+      (let [msg (str (when (and (not exclude-level?) (not lang))
                        (get @formatted-levels (:level r-to-log)))
-                     (:message r-to-log)
+                     (if lang
+                       (str "\n```" (name lang) "\n" (:message r-to-log) "\n```\n")
+                       (:message r-to-log))
                      (when pp-r-map?
                        (str "\n" (puget/cprint-str (dissoc r-to-log :level :message)))))]
         (if (= :console @output-to)
@@ -148,9 +151,7 @@
             (binding [*out* *err*]
               (println msg))
             (println msg))
-          (spit @output-to
-                (str msg "\n")
-                :append true)))))
+          (spit @output-to msg :append true)))))
   result)
 
 (defn print-all-levels
@@ -165,6 +166,7 @@
   (log (r/r :warn "warn result logged at error") :override-level :error)
   (log (r/r :error "excluded level") :exclude-level? true)
   (log (r/r :error "map print test" {:a 1 :b 2}) :pp-r-map? true)
+  (log (r/r :info "(+ 1 2)") :lang :clojure)
   (print-all-levels)
   (print-all-levels :force? true))
 
