@@ -8,30 +8,31 @@
 
 (set! *warn-on-reflection* true) ; for graalvm
 
-(defn output-header
-  [config result]
+(defn format-header
+  [config user-input result]
   (let [active-db-spec (cfg/get-active-db-spec config)]
     (str
       (str/trim
         (str
           (when (:print-config-info config)
-            (format " **%s**: *%s* / *%s* / *%s* "
+            (format "**%s**: *%s* / *%s* / *%s*"
                     (-> active-db-spec :name name str/upper-case)
                     (:host active-db-spec)
                     (:dbname active-db-spec)
                     (:schema active-db-spec)))
           (when (:print-table-counts config)
-            (format "`%d x %d` "
-              (or (:row-count result) 0)
-              (or (:col-count result) 0)))))
+            (format " `%d x %d`"
+              (or (:col-count result) 0)
+              (or (:row-count result) 0)))
+          (when (:print-user-input config)
+            (format "\n```sql\n%s\n```" (str/replace user-input #"\n+" " ")))))
       "\n")))
 
 (defn print-r
   [result user-input config output-fmt]
   (let [result (if (= :plain output-fmt)
                  result
-                 (r/prepend-msg result (output-header config result)))
-        result (r/append-msg result (str "\n\n" user-input))]
+                 (r/prepend-msg result (format-header config user-input result)))]
     (when (not (str/blank? (:write-to-file config)))
       (spit (:write-to-file config) (:message result)))
     (r/print-msg result)

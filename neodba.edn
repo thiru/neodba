@@ -12,5 +12,6 @@
          :password "postgres"}}
  :print-config-info true
  :print-table-counts true
+ :print-user-input true
  ;; Can be nil/empty to not write SQL output to a file
  :write-to-file "sql-output.md"}
