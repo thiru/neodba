@@ -42,7 +42,7 @@
   "Format query result as a markdown table and capture row count."
   [query-res output-fmt]
   (if (empty? query-res)
-    (r/r :warn "\n*NO RESULTS*" {:row-count 0, :col-count 0})
+    (r/r :info "\n*NO RESULTS*" {:row-count 0, :col-count 0})
     (let [row-count (-> query-res count)
           all-keys (-> query-res first keys)
           col-count (-> all-keys count)]
