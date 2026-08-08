@@ -1,33 +1,54 @@
 #!/usr/bin/env bash
 
-# Builds a static, self-contained executable using GraalVM's native-image tool.
+# Builds a self-contained executable using GraalVM's native-image tool.
+#
+# On Linux the executable is statically linked (no external dependencies at
+# all), which requires the musl toolchain. See the following for details:
+# https://www.graalvm.org/latest/reference-manual/native-image/guides/build-static-executables/
 #
 # See the following for a reference of native-image options:
 # https://www.graalvm.org/latest/reference-manual/native-image/overview/BuildOptions/
-#
-# Additionally, the self-contained executable is statically linked, meaning that it does not
-# depend on any external libraries whatsoever. This requires some additional setup such as the
-# musl toolchain. See the following for more details:
-# https://www.graalvm.org/latest/reference-manual/native-image/guides/build-static-executables/
 
 set -eou pipefail
 
-if ! command -v native-image &> /dev/null; then
-  echo 'GraalVM native-image command not found'
+SRC_NS=neodba.main
+
+case "$(uname -s)" in
+  Linux)
+    NATIVE_IMAGE=native-image
+    if [ -z "${MUSL_HOME:-}" ]; then
+      echo "MUSL_HOME is either unset or empty"
+      exit 1
+    fi
+    PATH="$MUSL_HOME/bin:$PATH"
+    TARGET_FILE=target/neodba
+    OUT_FILE=$TARGET_FILE
+    CP_SEP=:
+    STATIC_ARGS=(--static --libc=musl)
+    ;;
+  MINGW* | MSYS* | CYGWIN*)
+    NATIVE_IMAGE=native-image.cmd
+    TARGET_FILE=target/neodba.exe
+    # Native-image on Windows is invoked via a .cmd wrapper from Git Bash,
+    # which can mangle a path with slashes in the -o argument. Build into the
+    # current directory (no slashes) and move the result into place below.
+    # Note that native-image appends ".exe" to the -o name on Windows.
+    OUT_FILE=neodba
+    CP_SEP=';'
+    STATIC_ARGS=()
+    ;;
+  *)
+    echo "Unsupported platform: $(uname -s)"
+    exit 1
+    ;;
+esac
+
+if ! command -v "$NATIVE_IMAGE" &> /dev/null; then
+  echo "GraalVM $NATIVE_IMAGE command not found"
   exit 1
 fi
 
-if [ -z "${MUSL_HOME:-}" ]; then
-    echo "MUSL_HOME is either unset or empty"
-    exit 1
-fi
-
-PATH="$MUSL_HOME/bin:$PATH"
-
-SRC_NS=neodba.main
-TARGET_FILE=target/neodba
-
-echo "Building static, self-contained executable ($SRC_NS -> $TARGET_FILE)..."
+echo "Building executable ($SRC_NS -> $TARGET_FILE)..."
 echo
 
 # Java compiled classes will be placed in this directory:
@@ -40,8 +61,8 @@ mkdir -p target
 clojure -J-Dclojure.spec.compile-asserts=false -M -e "(compile '$SRC_NS)"
 
 # Build stand-alone binary:
-native-image \
-  -cp "$(clojure -Spath):classes" \
+"$NATIVE_IMAGE" \
+  -cp "$(clojure -Spath)${CP_SEP}classes" \
   -H:+ReportExceptionStackTraces \
   -J-Dclojure.spec.skip-macros=true \
   -J-Dclojure.spec.compile-asserts=false \
@@ -54,11 +75,19 @@ native-image \
   --diagnostics-mode \
   --no-fallback \
   --native-image-info \
-  --static --libc=musl \
+  "${STATIC_ARGS[@]}" \
   --verbose \
   "-J-Xmx${NATIVE_IMAGE_MEM:-16g}" \
-  -o "$TARGET_FILE" \
+  -o "$OUT_FILE" \
   "$SRC_NS"
+
+if [ "$OUT_FILE" != "$TARGET_FILE" ]; then
+  if [ -f "$OUT_FILE.exe" ]; then
+    mv "$OUT_FILE.exe" "$TARGET_FILE"
+  else
+    mv "$OUT_FILE" "$TARGET_FILE"
+  fi
+fi
 
 # Explanation of some of the args above:
 
