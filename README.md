@@ -10,16 +10,14 @@ I wanted a Neovim database plugin that didn't require separate dependencies for 
 
 ## Installation
 
-*NOTE: only Linux x64 and Windows x64 architectures are currently supported.*
-
 Simply grab the latest binary from [Releases](https://github.com/thiru/neodba/releases) and extract it to a location in your `PATH`, e.g.:
 
 ```shell
-tar -xf neodba-VERSION-x86_64-linux.tar.gz
+tar -xf neodba-VERSION-linux-x86_64.tar.gz
 sudo mv neodba /usr/bin
 ```
 
-On Windows, extract the `neodba-VERSION-x86_64-windows.zip` archive and add the directory containing `neodba.exe` to your `PATH`.
+On Windows, extract the zip file and add the directory containing `neodba.exe` to your `PATH`.
 
 ## Usage
 
