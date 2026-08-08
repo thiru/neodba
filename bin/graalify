@@ -24,7 +24,14 @@ case "$(uname -s)" in
     TARGET_FILE=target/neodba
     OUT_FILE=$TARGET_FILE
     CP_SEP=:
-    STATIC_ARGS=(--static --libc=musl)
+    STATIC_ARGS="--static --libc=musl"
+    ;;
+  Darwin)
+    NATIVE_IMAGE=native-image
+    TARGET_FILE=target/neodba
+    OUT_FILE=$TARGET_FILE
+    CP_SEP=:
+    STATIC_ARGS=""
     ;;
   MINGW* | MSYS* | CYGWIN*)
     NATIVE_IMAGE=native-image.cmd
@@ -35,7 +42,7 @@ case "$(uname -s)" in
     # Note that native-image appends ".exe" to the -o name on Windows.
     OUT_FILE=neodba
     CP_SEP=';'
-    STATIC_ARGS=()
+    STATIC_ARGS=""
     ;;
   *)
     echo "Unsupported platform: $(uname -s)"
@@ -75,7 +82,7 @@ clojure -J-Dclojure.spec.compile-asserts=false -M -e "(compile '$SRC_NS)"
   --diagnostics-mode \
   --no-fallback \
   --native-image-info \
-  "${STATIC_ARGS[@]}" \
+  $STATIC_ARGS \
   --verbose \
   "-J-Xmx${NATIVE_IMAGE_MEM:-16g}" \
   -o "$OUT_FILE" \

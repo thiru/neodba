@@ -16,6 +16,9 @@ jobs:
           - os: windows-latest
             artifact: neodba-x86_64-windows
             archive: target/neodba.exe
+          - os: macos-latest
+            artifact: neodba-macos-arm64
+            archive: target/neodba
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
