@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm
+          java-version: '24'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          cli: latest
+
+      - name: Install musl toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools zlib1g-dev
+          curl -sL https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz | tar -xz -C /tmp
+          cd /tmp/zlib-1.3.1
+          CC=musl-gcc ./configure --static --prefix=/tmp/zlib-musl
+          make
+          sudo cp /tmp/zlib-1.3.1/libz.a /usr/lib/x86_64-linux-musl/
+
+      - name: Build static native binary
+        env:
+          MUSL_HOME: /usr
+          NATIVE_IMAGE_MEM: 4g
+        run: ./bin/graalify
+
+      - name: Compress
+        run: ./bin/compress
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: neodba-x86_64-linux
+          path: target/neodba-*-x86_64-linux.tar.gz

@@ -56,7 +56,7 @@ native-image \
   --native-image-info \
   --static --libc=musl \
   --verbose \
-  "-J-Xmx16g" \
+  "-J-Xmx${NATIVE_IMAGE_MEM:-16g}" \
   -o "$TARGET_FILE" \
   "$SRC_NS"
 
